@@ -1,0 +1,149 @@
+# ==========================================
+# SECRETS & ENVIRONMENT VARIABLES
+# ==========================================
+**/.env
+**/.env.local
+**/.env.development.local
+**/.env.test.local
+**/.env.production.local
+
+# ==========================================
+# PYTHON / BACKEND
+# ==========================================
+# Virtual Environment
+backend/venv/
+backend/env/
+backend/ENV/
+backend/.venv/
+**/venv/
+**/env/
+
+# Python Cache
+**/__pycache__/
+**/*.py[cod]
+**/*$py.class
+**/*.so
+**/.Python
+
+# Database (SQLite - dev only)
+**/*.db
+**/*.sqlite
+**/*.sqlite3
+backend/bbeum.db
+backend/beauty_booking.db
+
+# Jupyter Notebooks
+**/.ipynb_checkpoints
+
+# IDEs
+**/.idea/
+**/.vscode/
+
+# Python Distribution / Packaging
+**/build/
+**/develop-eggs/
+**/dist/
+**/downloads/
+**/eggs/
+**/.eggs/
+**/lib/
+**/lib64/
+**/parts/
+**/sdist/
+**/var/
+**/wheels/
+**/*.egg-info/
+**/.installed.cfg
+**/*.egg
+
+# Testing
+**/.pytest_cache/
+**/.coverage
+**/htmlcov/
+**/.tox/
+
+# ==========================================
+# NODE.JS / FRONTEND
+# ==========================================
+# Dependencies
+**/node_modules/
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+
+# Next.js
+web/.next/
+web/out/
+**/.next/
+**/out/
+
+# Production build
+**/build/
+**/dist/
+
+# Testing
+**/coverage/
+
+# Misc
+**/.DS_Store
+**/*.pem
+
+# Vercel
+**/.vercel
+
+# Turborepo
+**/.turbo
+
+# ==========================================
+# OS FILES
+# ==========================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# ==========================================
+# EDITOR FILES
+# ==========================================
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ==========================================
+# LOGS
+# ==========================================
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ==========================================
+# BACKUPS
+# ==========================================
+*.bak
+*.backup
+*_backup_*
+
+
+pics/

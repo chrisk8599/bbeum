@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-50: #fdfcfb;
+  --color-primary-100: #f8f6f3;
+  --color-primary-200: #f0ebe4;
+  --color-primary-300: #e8e0d5;
+  --color-primary-400: #d4c5a0;
+  --color-primary-500: #c4b589;
+  --color-primary-600: #a89668;
+  --color-primary-700: #8c7a52;
+  --color-primary-800: #6b5d3f;
+  --color-primary-900: #4a4029;
+
+  --color-beige-50: #fdfcfb;
+  --color-beige-100: #f8f6f3;
+  --color-beige-200: #f0ebe4;
+  --color-beige-300: #e8e0d5;
+  --color-beige-400: #d4c5a0;
+  --color-beige-500: #c4b589;
+  --color-beige-600: #a89668;
+  --color-beige-700: #8c7a52;
+  --color-beige-800: #6b5d3f;
+  --color-beige-900: #4a4029;
+
+  --color-neutral-50: #fafafa;
+  --color-neutral-100: #f5f5f5;
+  --color-neutral-200: #e5e5e5;
+  --color-neutral-300: #d4d4d4;
+  --color-neutral-400: #a3a3a3;
+  --color-neutral-500: #737373;
+  --color-neutral-600: #525252;
+  --color-neutral-700: #404040;
+  --color-neutral-800: #262626;
+  --color-neutral-900: #171717;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+}
