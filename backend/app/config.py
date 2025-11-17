@@ -1,16 +1,26 @@
 from pydantic_settings import BaseSettings
+import os
 
 class Settings(BaseSettings):
     app_name: str = "Beauty Booking API"
-    database_url: str = "sqlite:///./beauty_booking.db"
-    secret_key: str = "your-secret-key-change-in-production-make-it-long-and-random"
+    
+    # Database - use environment variable in production
+    database_url: str = os.getenv(
+        "DATABASE_URL", 
+        "sqlite:///./beauty_booking.db"
+    )
+    
+    secret_key: str = os.getenv(
+        "SECRET_KEY",
+        "your-secret-key-change-in-production"
+    )
     algorithm: str = "HS256"
-    access_token_expire_minutes: int = 60 * 24 * 7  # 7 days
+    access_token_expire_minutes: int = 60 * 24 * 7
     
     # Cloudinary settings
-    cloudinary_cloud_name: str = ""
-    cloudinary_api_key: str = ""
-    cloudinary_api_secret: str = ""
+    cloudinary_cloud_name: str = os.getenv("CLOUDINARY_CLOUD_NAME", "")
+    cloudinary_api_key: str = os.getenv("CLOUDINARY_API_KEY", "")
+    cloudinary_api_secret: str = os.getenv("CLOUDINARY_API_SECRET", "")
     
     class Config:
         env_file = ".env"
