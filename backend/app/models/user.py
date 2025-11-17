@@ -6,6 +6,7 @@ import enum
 class UserType(str, enum.Enum):
     CUSTOMER = "customer"
     VENDOR = "vendor"
+    PROFESSIONAL = "professional"  # NEW: for employee accounts
 
 class User(Base):
     __tablename__ = "users"

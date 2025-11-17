@@ -146,3 +146,28 @@ yarn-error.log*
 *_backup_*
 
 pics/
+
+
+# Backend
+backend/.env
+backend/__pycache__/
+backend/*.pyc
+backend/*.db
+backend/beauty_booking.db
+
+# Frontend
+web/.env.local
+web/.env
+web/node_modules/
+web/.next/
+web/out/
+web/build/
+
+# General
+.DS_Store
+*.log
+.vscode/
+.idea/
+
+*.txt
+*.zip

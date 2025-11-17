@@ -1,12 +1,16 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { vendorsAPI } from '@/lib/api';
 import { useRouter } from 'next/navigation';
-
+import Script from 'next/script';
+import ProtectedRoute from '@/components/ProtectedRoute';
 export default function VendorSetup() {
   const { user } = useAuth();
   const router = useRouter();
+  const addressInputRef = useRef(null);
+  const autocompleteRef = useRef(null);
+  
   const [formData, setFormData] = useState({
     business_name: user?.full_name || '',
     bio: '',
@@ -14,6 +18,41 @@ export default function VendorSetup() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [mapsLoaded, setMapsLoaded] = useState(false);
+
+  const initAutocomplete = () => {
+    if (!addressInputRef.current || autocompleteRef.current) return;
+    if (!window.google?.maps?.places) return;
+
+    try {
+      autocompleteRef.current = new window.google.maps.places.Autocomplete(
+        addressInputRef.current,
+        {
+          types: ['address'],
+          componentRestrictions: { country: 'au' },
+          fields: ['formatted_address']
+        }
+      );
+
+      autocompleteRef.current.addListener('place_changed', () => {
+        const place = autocompleteRef.current?.getPlace();
+        if (place?.formatted_address) {
+          setFormData(prev => ({
+            ...prev,
+            location: place.formatted_address
+          }));
+        }
+      });
+    } catch (error) {
+      console.error('Autocomplete error:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (mapsLoaded) {
+      initAutocomplete();
+    }
+  }, [mapsLoaded]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -22,6 +61,12 @@ export default function VendorSetup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    
+    if (formData.bio.length < 50) {
+      setError('Bio must be at least 50 characters');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -34,92 +79,120 @@ export default function VendorSetup() {
     }
   };
 
+  const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+
   return (
-    <div className="min-h-screen bg-beige-300 flex items-center justify-center px-4">
-      <div className="bg-white p-8 rounded-2xl shadow-xl max-w-2xl w-full border border-beige-200">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2 text-neutral-900">Set Up Your Profile</h1>
-          <p className="text-neutral-600">
-            Let's get your professional profile ready for customers
-          </p>
+    <ProtectedRoute allowedUserTypes={['vendor']}>
+      {googleMapsApiKey && (
+        <Script
+          src={`https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&libraries=places`}
+          onLoad={() => setMapsLoaded(true)}
+          strategy="afterInteractive"
+        />
+      )}
+      
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center px-4 py-12">
+        <div className="bg-white p-10 rounded-2xl shadow-sm max-w-2xl w-full border border-neutral-200">
+          <div className="text-center mb-10">
+            <h1 className="text-4xl font-serif mb-3 text-neutral-900">Set Up Your Profile</h1>
+            <p className="text-lg text-neutral-600">
+              Let's get your professional profile ready for customers
+            </p>
+          </div>
+
+          {error && (
+            <div className="bg-red-50 text-red-700 p-4 rounded-xl mb-6 text-sm border border-red-200">
+              {error}
+            </div>
+          )}
+
+          {!googleMapsApiKey && (
+            <div className="bg-yellow-50 text-yellow-800 p-4 rounded-xl mb-6 text-sm border border-yellow-200">
+              ⚠️ Google Maps API key not configured. Address autocomplete disabled.
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-neutral-900 mb-2">
+                Business Name *
+              </label>
+              <input
+                type="text"
+                name="business_name"
+                value={formData.business_name}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-transparent bg-white transition"
+                placeholder="e.g. Maria's Beauty Studio"
+              />
+              <p className="text-xs text-neutral-500 mt-2">
+                This is how customers will find you
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-neutral-900 mb-2">
+                Bio *
+              </label>
+              <textarea
+                name="bio"
+                value={formData.bio}
+                onChange={handleChange}
+                required
+                rows={5}
+                className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-transparent bg-white transition resize-none"
+                placeholder="Tell customers about your experience, specialties, and what makes you unique..."
+              />
+              <div className="flex justify-between items-center mt-2">
+                <p className="text-xs text-neutral-500">
+                  Minimum 50 characters
+                </p>
+                <p className={`text-xs ${formData.bio.length >= 50 ? 'text-green-600' : 'text-neutral-400'}`}>
+                  {formData.bio.length}/50
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-neutral-900 mb-2">
+                Business Address *
+              </label>
+              <input
+                ref={addressInputRef}
+                type="text"
+                name="location"
+                value={formData.location}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-transparent bg-white transition"
+                placeholder="Start typing your address..."
+              />
+              <p className="text-xs text-neutral-500 mt-2">
+                {mapsLoaded 
+                  ? '📍 Start typing and select your address from the dropdown'
+                  : googleMapsApiKey 
+                    ? '⏳ Loading address autocomplete...'
+                    : '✍️ Enter your business address'}
+              </p>
+            </div>
+
+            <div className="bg-primary-50 border border-primary-200 rounded-xl p-5">
+              <p className="text-sm text-neutral-700">
+                <span className="font-medium">💡 Next steps:</span> After setup, you can add services, upload photos, and set your availability
+              </p>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-primary-600 text-white py-4 rounded-xl font-medium hover:bg-primary-700 disabled:bg-neutral-400 disabled:cursor-not-allowed transition shadow-sm hover:shadow-md"
+            >
+              {loading ? 'Setting up...' : 'Complete Setup & Go to Dashboard'}
+            </button>
+          </form>
         </div>
-
-        {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">
-              Business Name *
-            </label>
-            <input
-              type="text"
-              name="business_name"
-              value={formData.business_name}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 border border-beige-300 rounded-lg focus:ring-2 focus:ring-beige-400 focus:border-transparent bg-white"
-              placeholder="e.g. Maria's Beauty Studio"
-            />
-            <p className="text-xs text-neutral-500 mt-1">
-              This is how customers will find you
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">
-              Bio *
-            </label>
-            <textarea
-              name="bio"
-              value={formData.bio}
-              onChange={handleChange}
-              required
-              rows={4}
-              className="w-full px-4 py-3 border border-beige-300 rounded-lg focus:ring-2 focus:ring-beige-400 focus:border-transparent bg-white"
-              placeholder="Tell customers about your experience, specialties, and what makes you unique..."
-            />
-            <p className="text-xs text-neutral-500 mt-1">
-              Minimum 50 characters
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">
-              Location *
-            </label>
-            <input
-              type="text"
-              name="location"
-              value={formData.location}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 border border-beige-300 rounded-lg focus:ring-2 focus:ring-beige-400 focus:border-transparent bg-white"
-              placeholder="e.g. Bondi, Sydney"
-            />
-            <p className="text-xs text-neutral-500 mt-1">
-              City or suburb where you provide services
-            </p>
-          </div>
-
-          <div className="bg-beige-100 border border-beige-300 rounded-lg p-4">
-            <p className="text-sm text-neutral-700">
-              💡 <strong>Coming soon:</strong> Portfolio upload, services setup, and availability settings
-            </p>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-neutral-900 text-white py-3 rounded-lg font-semibold hover:bg-neutral-800 disabled:bg-neutral-400 disabled:cursor-not-allowed transition"
-          >
-            {loading ? 'Setting up...' : 'Complete Setup & Go to Dashboard'}
-          </button>
-        </form>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }

@@ -7,17 +7,25 @@ class Service(Base):
     __tablename__ = "services"
 
     id = Column(Integer, primary_key=True, index=True)
-    vendor_id = Column(Integer, ForeignKey("vendors.id"), nullable=False)
+    
+    # CHANGED: Now links to professional instead of vendor
+    professional_id = Column(Integer, ForeignKey("professionals.id"), nullable=False, index=True)
+    
     name = Column(String, nullable=False)
     description = Column(Text)
     price = Column(Float, nullable=False)
-    duration_minutes = Column(Integer, nullable=False)  # e.g., 60 for 1 hour
+    duration_minutes = Column(Integer, nullable=False)
     is_active = Column(Boolean, default=True)
+    
+    category_id = Column(Integer, ForeignKey("service_categories.id"), nullable=True)
+    
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationship
-    vendor = relationship("Vendor", backref="services")
+    # Relationships
+    professional = relationship("Professional", back_populates="services")
+    category = relationship("ServiceCategory", back_populates="services")
+    images = relationship("ServiceImage", back_populates="service", cascade="all, delete-orphan")
 
 class ServiceImage(Base):
     __tablename__ = "service_images"
@@ -25,8 +33,7 @@ class ServiceImage(Base):
     id = Column(Integer, primary_key=True, index=True)
     service_id = Column(Integer, ForeignKey("services.id"), nullable=False)
     image_url = Column(String, nullable=False)
-    order = Column(Integer, default=0)  # For ordering images
+    order = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
     
-    # Relationship
-    service = relationship("Service", backref="images")
+    service = relationship("Service", back_populates="images")

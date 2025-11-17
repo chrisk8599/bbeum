@@ -33,7 +33,7 @@ export default function ImageUpload({ serviceId, images = [], onUpdate, isPro })
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await api.post(`/services/${serviceId}/images`, formData, {
+      const response = await api.post(`/api/services/${serviceId}/images`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -52,7 +52,7 @@ export default function ImageUpload({ serviceId, images = [], onUpdate, isPro })
     if (!confirm('Delete this image?')) return;
 
     try {
-      await api.delete(`/services/${serviceId}/images/${imageId}`);
+      await api.delete(`/api/services/${serviceId}/images/${imageId}`);
       await onUpdate();
     } catch (error) {
       alert('Failed to delete image');
@@ -104,11 +104,11 @@ export default function ImageUpload({ serviceId, images = [], onUpdate, isPro })
               <img
                 src={img.image_url}
                 alt=""
-                className="w-full h-full object-cover rounded-lg border border-primary-200"
+                className="w-full h-full object-cover rounded-lg border border-[#E5DDD5]"
               />
               <button
                 onClick={() => handleDelete(img.id)}
-                className="absolute top-2 right-2 bg-red-600 text-white w-8 h-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700 text-sm font-bold"
+                className="absolute top-2 right-2 bg-red-600 text-white w-8 h-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700 text-sm font-serif"
               >
                 ×
               </button>
@@ -126,8 +126,8 @@ export default function ImageUpload({ serviceId, images = [], onUpdate, isPro })
           onDrop={handleDrop}
           className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
             dragActive
-              ? 'border-primary-500 bg-primary-50'
-              : 'border-primary-300 hover:border-primary-400'
+              ? 'border-[#B8A188] bg-[#F5F0EB]'
+              : 'border-[#E5DDD5] hover:border-[#B8A188]'
           }`}
         >
           <input

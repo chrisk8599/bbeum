@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.user import User, UserType
 from app.models.vendor import Vendor
+from app.models.professional import Professional
 from app.schemas.user import UserRegister, UserLogin, TokenResponse, UserResponse
 from app.auth import get_password_hash, verify_password, create_access_token, get_current_user
 
@@ -31,14 +32,28 @@ def register(user_data: UserRegister, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
     
-    # If vendor, create empty vendor profile
+    # If vendor, create vendor profile AND professional profile
     if user_data.user_type == UserType.VENDOR:
+        # Create vendor (business account)
         vendor_profile = Vendor(
             user_id=new_user.id,
             business_name=user_data.full_name,  # Default to their name
-            is_active=False  # Not active until they complete profile
+            is_active=False,  # Not active until they complete profile
+            pro_employee_limit=0  # Free tier: no additional employees
         )
         db.add(vendor_profile)
+        db.commit()
+        db.refresh(vendor_profile)
+        
+        # Create professional profile (vendor is first professional)
+        professional_profile = Professional(
+            user_id=new_user.id,
+            vendor_id=vendor_profile.id,
+            display_name=user_data.full_name,
+            is_owner=True,  # Mark as owner
+            is_active=True  # Professional is active immediately
+        )
+        db.add(professional_profile)
         db.commit()
     
     # Create access token

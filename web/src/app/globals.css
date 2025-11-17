@@ -36,7 +36,7 @@
 }
 
 :root {
-  --background: #ffffff;
+  --background: #f0ebe4;
   --foreground: #171717;
 }
 
@@ -47,7 +47,12 @@
   }
 }
 
+html {
+  background: #f0ebe4;
+}
+
 body {
   color: var(--foreground);
-  background: var(--background);
+  background: transparent;
+  min-height: 100vh;
 }

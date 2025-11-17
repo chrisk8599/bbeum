@@ -1,23 +1,26 @@
 from pydantic import BaseModel
+from typing import Optional, List
 from datetime import datetime
+from app.schemas.professional import ProfessionalListItem
 
+# Request schemas
 class VendorProfileSetup(BaseModel):
     business_name: str
-    bio: str | None = None
-    location: str | None = None
+    bio: Optional[str] = None
+    location: str  # Google Places formatted address
 
 class VendorProfileUpdate(BaseModel):
-    business_name: str | None = None
-    bio: str | None = None
-    location: str | None = None
-    is_active: bool | None = None
+    business_name: Optional[str] = None
+    bio: Optional[str] = None
+    location: Optional[str] = None
+    avatar_url: Optional[str] = None
 
-class VendorResponse(BaseModel):
+# Response schemas
+class VendorBase(BaseModel):
     id: int
-    user_id: int
     business_name: str
-    bio: str | None
-    location: str | None
+    bio: Optional[str] = None
+    location: Optional[str] = None
     rating: float
     is_pro: bool
     is_active: bool
@@ -26,9 +29,32 @@ class VendorResponse(BaseModel):
     class Config:
         from_attributes = True
 
-class VendorDetailResponse(VendorResponse):
-    phone: str | None
+class VendorResponse(VendorBase):
+    """Basic vendor response"""
+    avatar_url: Optional[str] = None
+
+class VendorWithProfessionals(VendorBase):
+    """Vendor response with list of professionals"""
+    avatar_url: Optional[str] = None
+    professionals: List[ProfessionalListItem] = []
+    total_professionals: int
+    can_add_professional: bool
+
+class VendorDetailResponse(VendorBase):
+    """Vendor detail with contact info"""
+    avatar_url: Optional[str] = None
+    phone: Optional[str] = None
     email: str
+
+class VendorListItem(BaseModel):
+    """Minimal vendor info for browse page"""
+    id: int
+    business_name: str
+    location: Optional[str] = None
+    rating: float
+    is_pro: bool
+    avatar_url: Optional[str] = None
+    total_professionals: int
     
     class Config:
         from_attributes = True

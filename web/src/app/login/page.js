@@ -31,64 +31,82 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-primary-100 flex items-center justify-center px-4">
-      <div className="bg-white p-10 rounded-2xl shadow-sm max-w-md w-full border border-primary-200">
-        <h1 className="text-3xl font-bold text-center mb-2 text-neutral-900">Welcome Back</h1>
-        <p className="text-center text-neutral-600 mb-8">
-          Login to your account
-        </p>
-
-        {error && (
-          <div className="bg-red-50 text-red-700 p-3 rounded-lg mb-6 text-sm border border-red-200">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">
-              Email
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 border border-primary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white transition"
-              placeholder="jane@example.com"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">
-              Password
-            </label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 border border-primary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white transition"
-              placeholder="Enter your password"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-neutral-900 text-white py-3.5 rounded-lg font-semibold hover:bg-neutral-800 disabled:bg-neutral-400 disabled:cursor-not-allowed transition shadow-sm"
-          >
-            {loading ? 'Logging in...' : 'Login'}
-          </button>
-        </form>
-
-        <p className="text-center text-sm text-neutral-600 mt-6">
-          Don't have an account?{' '}
-          <Link href="/register" className="text-neutral-900 font-semibold hover:underline">
-            Sign up
+    <div className="min-h-screen bg-gradient-beige-dark flex items-center justify-center px-6 py-12">
+      <div className="w-full max-w-[550px]">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <Link href="/" className="inline-block mb-6">
+            <h1 className="text-4xl font-serif text-neutral-900">bbeum</h1>
           </Link>
+          <h2 className="text-3xl font-serif text-neutral-900 mb-2">Welcome Back</h2>
+          <p className="text-neutral-600 text-lg">
+            Login to your account
+          </p>
+        </div>
+
+        {/* Main Form Card */}
+        <div className="bg-white/90 backdrop-blur-sm p-12 rounded-3xl border border-primary-300/50 shadow-lg">
+          {error && (
+            <div className="bg-red-50 text-red-700 p-4 rounded-xl mb-8 text-sm border border-red-200">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Email */}
+            <div>
+              <label className="block text-sm font-semibold text-neutral-700 mb-2">
+                Email
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="w-full text-black px-5 py-4 border border-primary-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white transition text-lg"
+                placeholder="jane@example.com"
+              />
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="block text-sm font-semibold text-neutral-700 mb-2">
+                Password
+              </label>
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                className="w-full text-black px-5 py-4 border border-primary-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white transition text-lg"
+                placeholder="Enter your password"
+              />
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-primary-600 text-white py-5 rounded-xl font-semibold text-lg hover:bg-primary-700 disabled:bg-neutral-400 disabled:cursor-not-allowed transition shadow-md hover:shadow-lg mt-8"
+            >
+              {loading ? 'Logging in...' : 'Login'}
+            </button>
+          </form>
+
+          {/* Sign Up Link */}
+          <p className="text-center text-neutral-600 mt-8 text-lg">
+            Don't have an account?{' '}
+            <Link href="/register" className="text-primary-700 font-semibold hover:text-primary-800 transition">
+              Sign up
+            </Link>
+          </p>
+        </div>
+
+        {/* Footer Note */}
+        <p className="text-center text-neutral-500 text-sm mt-8">
+          Secure login powered by bbeum
         </p>
       </div>
     </div>
