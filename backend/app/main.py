@@ -42,10 +42,10 @@ def read_root():
 def health_check():
     return {"status": "healthy"}
 
-# Database init on startup (optional)
+# Database init on startup
 @app.on_event("startup")
 async def startup():
     Base.metadata.create_all(bind=engine)
 
-# Serverless handler
-handler = Mangum(app)
+# --- Serverless handler ---
+handler = Mangum(app)  # THIS IS ALL VERCEL NEEDS
