@@ -1,11 +1,12 @@
 'use client';
-export const dynamic = 'force-dynamic'
+
+import { Suspense } from 'react';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function Register() {
+function RegisterForm() {
   const searchParams = useSearchParams();
   const { register } = useAuth();
   
@@ -179,5 +180,20 @@ export default function Register() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function Register() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-beige-dark flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-4xl font-serif text-neutral-900 mb-4">bbeum</h1>
+          <p className="text-neutral-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <RegisterForm />
+    </Suspense>
   );
 }
