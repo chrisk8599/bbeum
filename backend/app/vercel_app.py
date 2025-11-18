@@ -1,4 +1,3 @@
-from app.main import app
+from app.main import handler
 
-# This is the ASGI app that Vercel will use
-handler = app
+# This is already the Mangum-wrapped handler that Vercel needs
