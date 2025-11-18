@@ -126,7 +126,7 @@ export default function ReviewModal({ booking, existingReview = null, onClose, o
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <div className="text-sm text-neutral-700 space-y-1">
-                <p>✓ Your review will be publicly visible on the professional's profile</p>
+                <p>{"✓ Your review will be publicly visible on the professional's profile"}</p>
                 <p>✓ You can edit your review anytime</p>
               </div>
             </div>

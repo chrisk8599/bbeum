@@ -168,5 +168,5 @@ web/build/
 .vscode/
 .idea/
 
-*.txt
+
 *.zip
