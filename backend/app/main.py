@@ -1,8 +1,19 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.database import engine, Base
-from app.api import vendors, auth, services, availability, bookings, reviews, service_categories, analytics
-from mangum import Mangum  # Serverless adapter
+from mangum import Mangum
+import os
+
+# Import your routers
+from app.api import (
+    vendors, 
+    auth, 
+    services, 
+    availability, 
+    bookings, 
+    reviews, 
+    service_categories, 
+    analytics
+)
 
 app = FastAPI(
     title="Bbeum API",
@@ -10,12 +21,15 @@ app = FastAPI(
     version="2.0.0"
 )
 
-# CORS
+# CORS - Update with your actual Vercel URL
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "https://your-app-name.vercel.app",
+        FRONTEND_URL,
+        "https://bbeum.vercel.app",  # Replace with your actual frontend URL
         "https://*.vercel.app",
     ],
     allow_credentials=True,
@@ -23,7 +37,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Routers
+# Include routers with /api prefix
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(vendors.router, prefix="/api/vendors", tags=["Vendors"])
 app.include_router(services.router, prefix="/api/services", tags=["Services"])
@@ -33,19 +47,34 @@ app.include_router(reviews.router, prefix="/api/reviews", tags=["Reviews"])
 app.include_router(service_categories.router, prefix="/api/categories", tags=["Categories"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
 
-# Health & root
 @app.get("/")
 def read_root():
-    return {"message": "Bbeum API - Professional Management System", "docs": "/docs"}
+    return {
+        "message": "Bbeum API - Professional Management System",
+        "docs": "/docs",
+        "status": "running"
+    }
+
+@app.get("/api")
+def api_root():
+    return {
+        "message": "Bbeum API",
+        "version": "2.0.0",
+        "endpoints": {
+            "auth": "/api/auth",
+            "vendors": "/api/vendors",
+            "services": "/api/services",
+            "availability": "/api/availability",
+            "bookings": "/api/bookings",
+            "reviews": "/api/reviews",
+            "categories": "/api/categories",
+            "analytics": "/api/analytics"
+        }
+    }
 
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}
 
-# Database init on startup
-@app.on_event("startup")
-async def startup():
-    Base.metadata.create_all(bind=engine)
-
-# --- Serverless handler ---
-handler = Mangum(app)  # THIS IS ALL VERCEL NEEDS
+# Serverless handler for Vercel
+handler = Mangum(app, lifespan="off")
