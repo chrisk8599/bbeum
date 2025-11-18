@@ -10,6 +10,13 @@ class Settings(BaseSettings):
         "sqlite:///./beauty_booking.db"
     )
     
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # Fix Heroku/some providers that use postgres:// instead of postgresql://
+        if self.database_url.startswith("postgres://"):
+            self.database_url = self.database_url.replace("postgres://", "postgresql://", 1)
+            print(f"⚠️  Converted postgres:// to postgresql:// for SQLAlchemy compatibility")
+    
     secret_key: str = os.getenv(
         "SECRET_KEY",
         "your-secret-key-change-in-production"
