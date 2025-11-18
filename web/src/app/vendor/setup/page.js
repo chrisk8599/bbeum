@@ -96,7 +96,7 @@ export default function VendorSetup() {
           <div className="text-center mb-10">
             <h1 className="text-4xl font-serif mb-3 text-neutral-900">Set Up Your Profile</h1>
             <p className="text-lg text-neutral-600">
-              Let's get your professional profile ready for customers
+              {"Let's get your professional profile ready for customers"}
             </p>
           </div>
 

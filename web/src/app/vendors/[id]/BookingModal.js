@@ -279,7 +279,7 @@ export default function BookingModal({ vendor, professionals, service, onClose, 
               </div>
               <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
                 <p className="text-xs text-amber-800">
-                  ℹ️ Status will be "Pending" until professional confirms
+                 {"ℹ️ Status will be Pending until professional confirms"} 
                 </p>
               </div>
             </div>
