@@ -36,26 +36,26 @@ def get_revenue_summary(
     # Total completed bookings revenue
     total_revenue = db.query(func.sum(Booking.price)).filter(
         Booking.professional_id.in_(professional_ids),
-        Booking.status == BookingStatus.COMPLETED
+        Booking.status == 'completed'
     ).scalar() or 0.0
     
     # Total pending revenue (confirmed but not completed)
     pending_revenue = db.query(func.sum(Booking.price)).filter(
         Booking.professional_id.in_(professional_ids),
-        Booking.status == BookingStatus.CONFIRMED
+        Booking.status == 'confirmed'
     ).scalar() or 0.0
     
     # Total bookings count
     total_bookings = db.query(func.count(Booking.id)).filter(
         Booking.professional_id.in_(professional_ids),
-        Booking.status == BookingStatus.COMPLETED
+        Booking.status == 'completed'
     ).scalar() or 0
     
     # Today's revenue
     today = date.today()
     today_revenue = db.query(func.sum(Booking.price)).filter(
         Booking.professional_id.in_(professional_ids),
-        Booking.status == BookingStatus.COMPLETED,
+        Booking.status == 'completed',
         Booking.booking_date == today
     ).scalar() or 0.0
     
@@ -64,7 +64,7 @@ def get_revenue_summary(
     week_end = week_start + timedelta(days=6)
     week_revenue = db.query(func.sum(Booking.price)).filter(
         Booking.professional_id.in_(professional_ids),
-        Booking.status == BookingStatus.COMPLETED,
+        Booking.status == 'completed',
         Booking.booking_date >= week_start,
         Booking.booking_date <= week_end
     ).scalar() or 0.0
@@ -78,7 +78,7 @@ def get_revenue_summary(
     
     month_revenue = db.query(func.sum(Booking.price)).filter(
         Booking.professional_id.in_(professional_ids),
-        Booking.status == BookingStatus.COMPLETED,
+        Booking.status == 'completed',
         Booking.booking_date >= month_start,
         Booking.booking_date <= month_end
     ).scalar() or 0.0
@@ -133,7 +133,7 @@ def get_daily_revenue(
         func.count(Booking.id).label('bookings')
     ).filter(
         Booking.professional_id.in_(professional_ids),
-        Booking.status == BookingStatus.COMPLETED,
+        Booking.status == 'completed',
         Booking.booking_date >= start_date,
         Booking.booking_date <= end_date
     ).group_by(Booking.booking_date).order_by(Booking.booking_date).all()
@@ -181,7 +181,7 @@ def get_weekly_revenue(
     # Get all completed bookings in range
     bookings = db.query(Booking).filter(
         Booking.professional_id.in_(professional_ids),
-        Booking.status == BookingStatus.COMPLETED,
+        Booking.status == 'completed',
         Booking.booking_date >= start_date,
         Booking.booking_date <= today
     ).all()
@@ -250,7 +250,7 @@ def get_monthly_revenue(
         func.count(Booking.id).label('bookings')
     ).filter(
         Booking.professional_id.in_(professional_ids),
-        Booking.status == BookingStatus.COMPLETED
+        Booking.status == 'completed'
     ).group_by(
         extract('year', Booking.booking_date),
         extract('month', Booking.booking_date)
@@ -312,7 +312,7 @@ def get_revenue_by_professional(
             func.count(Booking.id).label('bookings')
         ).filter(
             Booking.professional_id == prof.id,
-            Booking.status == BookingStatus.COMPLETED
+            Booking.status == 'completed'
         )
         
         # Add date filters if provided
@@ -378,7 +378,7 @@ def get_revenue_by_service(
         Booking, Booking.service_id == Service.id
     ).filter(
         Booking.professional_id.in_(professional_ids),
-        Booking.status == BookingStatus.COMPLETED
+        Booking.status == 'completed'
     )
     
     # Add date filters if provided

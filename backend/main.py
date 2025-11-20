@@ -11,7 +11,8 @@ from lib.routers import (
     bookings, 
     reviews, 
     service_categories, 
-    analytics
+    analytics,
+    professionals
 )
 
 app = FastAPI(
@@ -46,7 +47,7 @@ app.include_router(bookings.router, prefix="/api/bookings", tags=["Bookings"])
 app.include_router(reviews.router, prefix="/api/reviews", tags=["Reviews"])
 app.include_router(service_categories.router, prefix="/api/categories", tags=["Categories"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
-
+app.include_router(professionals.router, prefix="/api/professionals", tags=["Professionals"])
 @app.get("/")
 def read_root():
     return {

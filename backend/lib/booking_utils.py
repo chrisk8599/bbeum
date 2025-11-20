@@ -14,7 +14,7 @@ def update_professional_booking_count(professional_id: int, db: Session):
     """
     total_count = db.query(func.count(Booking.id)).filter(
         Booking.professional_id == professional_id,
-        Booking.status == BookingStatus.COMPLETED
+        Booking.status == 'completed'
     ).scalar() or 0
     
     professional = db.query(Professional).filter(Professional.id == professional_id).first()

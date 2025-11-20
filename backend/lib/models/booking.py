@@ -34,7 +34,7 @@ class Booking(Base):
     price = Column(Float, nullable=False)  # Price at time of booking
     
     # Status
-    status = Column(Enum(BookingStatus), default=BookingStatus.PENDING, nullable=False)
+    status = Column(Enum(BookingStatus), default='pending', nullable=False)
     
     # Notes
     customer_notes = Column(String, nullable=True)

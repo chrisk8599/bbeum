@@ -78,7 +78,7 @@ def calculate_available_slots(
     bookings = db.query(Booking).filter(
         Booking.professional_id == professional_id,
         Booking.booking_date == target_date,
-        Booking.status.notin_([BookingStatus.CANCELLED])
+        Booking.status.notin_(['cancelled'])
     ).all()
     
     # 7. Generate potential slots (no buffer between appointments)

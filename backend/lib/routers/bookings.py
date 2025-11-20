@@ -140,7 +140,7 @@ def create_booking(
         end_time=end_time,
         price=service.price,
         customer_notes=booking_data.customer_notes,
-        status=BookingStatus.PENDING
+        status='pending'
     )
     
     db.add(booking)
@@ -244,7 +244,7 @@ def format_professional_calendar(
         Booking.professional_id == professional.id,
         Booking.booking_date >= start_date,
         Booking.booking_date <= end_date,
-        Booking.status.in_([BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.COMPLETED])
+        Booking.status.in_(['pending', 'confirmed', 'completed'])
     ).all()
     
     calendar_bookings = []
@@ -483,9 +483,9 @@ def update_booking(
         # Professional/Vendor can update status
         if booking_update.status:
             booking.status = booking_update.status
-            if booking_update.status == BookingStatus.CONFIRMED:
+            if booking_update.status == 'confirmed':
                 booking.confirmed_at = datetime.utcnow()
-            elif booking_update.status == BookingStatus.COMPLETED:
+            elif booking_update.status == 'completed':
                 booking.completed_at = datetime.utcnow()
     
     elif current_user.user_type == UserType.CUSTOMER:
@@ -493,7 +493,7 @@ def update_booking(
             raise HTTPException(status_code=403, detail="Not authorized")
         
         # Customer can only update notes and only if booking is pending
-        if booking.status != BookingStatus.PENDING:
+        if booking.status != 'pending':
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Can only edit pending bookings"
@@ -506,7 +506,7 @@ def update_booking(
     db.refresh(booking)
     
     # Update booking count if status changed to completed
-    if old_status != BookingStatus.COMPLETED and booking.status == BookingStatus.COMPLETED:
+    if old_status != 'completed' and booking.status == 'completed':
         update_professional_booking_count(booking.professional_id, db)
     
     return populate_booking_response(booking, db)
@@ -540,13 +540,13 @@ def cancel_booking(
                 raise HTTPException(status_code=403, detail="Not authorized")
     
     # Check if already cancelled or completed
-    if booking.status in [BookingStatus.CANCELLED, BookingStatus.COMPLETED]:
+    if booking.status in ['cancelled', 'completed']:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cannot cancel a {booking.status.value} booking"
         )
     
-    booking.status = BookingStatus.CANCELLED
+    booking.status = 'cancelled'
     booking.cancellation_reason = cancel_data.reason
     booking.cancelled_at = datetime.utcnow()
     
@@ -584,13 +584,13 @@ def mark_no_show(
         if not booking_professional or booking_professional.vendor_id != professional.vendor_id:
             raise HTTPException(status_code=403, detail="Not authorized")
     
-    if booking.status != BookingStatus.CONFIRMED:
+    if booking.status != 'confirmed':
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Can only mark confirmed bookings as no-show"
         )
     
-    booking.status = BookingStatus.NO_SHOW
+    booking.status = 'no_show'
     
     db.commit()
     db.refresh(booking)
