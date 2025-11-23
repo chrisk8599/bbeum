@@ -1,26 +1,33 @@
-'use client';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { availabilityAPI, bookingsAPI } from '@/lib/api';
+"use client";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { availabilityAPI, bookingsAPI } from "@/lib/api";
 
-export default function BookingModal({ vendor, professionals, service, onClose, onSuccess }) {
+export default function BookingModal({
+  vendor,
+  professionals,
+  service,
+  onClose,
+  onSuccess,
+}) {
   const router = useRouter();
   const [selectedProfessional, setSelectedProfessional] = useState(null);
-  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedDate, setSelectedDate] = useState("");
   const [availableSlots, setAvailableSlots] = useState([]);
   const [selectedSlot, setSelectedSlot] = useState(null);
-  const [notes, setNotes] = useState('');
+  const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingSlots, setLoadingSlots] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
 
   // Auto-select professional if only one available or if service is only offered by one
   useEffect(() => {
     if (professionals && professionals.length > 0) {
-      // Filter professionals who offer this service
-      const availableProfessionals = professionals.filter(prof => 
-        prof.services?.some(s => s.id === service.id)
+      const availableProfessionals = professionals.filter((prof) =>
+        prof.services?.some((s) => s.id === service.id)
       );
-      
+
       if (availableProfessionals.length === 1) {
         setSelectedProfessional(availableProfessionals[0]);
       } else if (professionals.length === 1) {
@@ -37,18 +44,18 @@ export default function BookingModal({ vendor, professionals, service, onClose, 
 
   const loadAvailableSlots = async () => {
     if (!selectedProfessional) return;
-    
+
     setLoadingSlots(true);
     setSelectedSlot(null);
     try {
       const data = await availabilityAPI.getAvailableSlots({
         professional_id: selectedProfessional.id,
         service_id: service.id,
-        date: selectedDate
+        date: selectedDate,
       });
       setAvailableSlots(data.slots || []);
     } catch (error) {
-      console.error('Error loading slots:', error);
+      console.error("Error loading slots:", error);
       setAvailableSlots([]);
     } finally {
       setLoadingSlots(false);
@@ -65,48 +72,98 @@ export default function BookingModal({ vendor, professionals, service, onClose, 
         service_id: service.id,
         booking_date: selectedDate,
         start_time: selectedSlot.start_time,
-        customer_notes: notes || null
+        customer_notes: notes || null,
       };
 
       await bookingsAPI.createBooking(bookingData);
-      
+
       onClose();
-      router.push('/bookings');
+      router.push("/bookings");
     } catch (error) {
-      console.error('Booking error:', error);
-      alert(error.response?.data?.detail || 'Failed to create booking');
+      console.error("Booking error:", error);
+      alert(error.response?.data?.detail || "Failed to create booking");
     } finally {
       setLoading(false);
     }
   };
 
   const formatTime = (timeStr) => {
-    if (!timeStr) return 'Invalid Time';
-    
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    const period = hours >= 12 ? 'PM' : 'AM';
+    if (!timeStr) return "Invalid Time";
+
+    const [hours, minutes] = timeStr.split(":").map(Number);
+    const period = hours >= 12 ? "PM" : "AM";
     const hour12 = hours % 12 || 12;
-    
-    return `${hour12}:${minutes.toString().padStart(2, '0')} ${period}`;
+
+    return `${hour12}:${minutes.toString().padStart(2, "0")} ${period}`;
   };
 
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    return date.toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
-  const minDate = new Date().toISOString().split('T')[0];
+  // Custom Date Picker Functions
+  const getDaysInMonth = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+
+    return { daysInMonth, startingDayOfWeek };
+  };
+
+  const handleDateSelect = (day) => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const date = new Date(year, month, day);
+    const dateStr = date.toISOString().split("T")[0];
+    setSelectedDate(dateStr);
+    setShowDatePicker(false);
+  };
+
+  const changeMonth = (delta) => {
+    setCurrentMonth(
+      new Date(currentMonth.getFullYear(), currentMonth.getMonth() + delta, 1)
+    );
+  };
+
+  const isDateDisabled = (day) => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const date = new Date(year, month, day);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return date < today;
+  };
+
+  const isDateSelected = (day) => {
+    if (!selectedDate) return false;
+    const selectedDateObj = new Date(selectedDate);
+    return (
+      selectedDateObj.getDate() === day &&
+      selectedDateObj.getMonth() === currentMonth.getMonth() &&
+      selectedDateObj.getFullYear() === currentMonth.getFullYear()
+    );
+  };
+
+  const { daysInMonth, startingDayOfWeek } = getDaysInMonth(currentMonth);
+  const monthName = currentMonth.toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+  });
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
-      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] shadow-2xl border border-neutral-200 relative z-[101] flex flex-col">
-        {/* Header - Fixed at top */}
-        <div className="bg-white border-b border-neutral-200 p-6 rounded-t-2xl flex-shrink-0">
+      <div className="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] shadow-2xl border border-neutral-200 relative z-[101] flex flex-col">
+        {/* Header */}
+        <div className="bg-[#F5F0EB] border-b border-[#E5DDD5] p-6 rounded-t-2xl flex-shrink-0">
           <div className="flex justify-between items-start">
             <div>
               <h2 className="text-2xl font-bold text-neutral-900 mb-1">
@@ -114,7 +171,10 @@ export default function BookingModal({ vendor, professionals, service, onClose, 
               </h2>
               <p className="text-neutral-600">
                 {selectedProfessional ? (
-                  <>with {selectedProfessional.display_name} at {vendor.business_name}</>
+                  <>
+                    with {selectedProfessional.display_name} at{" "}
+                    {vendor.business_name}
+                  </>
                 ) : (
                   <>at {vendor.business_name}</>
                 )}
@@ -129,168 +189,340 @@ export default function BookingModal({ vendor, professionals, service, onClose, 
           </div>
         </div>
 
-        {/* Content - Scrollable middle section */}
-        <div className="p-6 space-y-6 overflow-y-auto flex-1">
-          {/* Professional Selection */}
-          {professionals && professionals.length > 1 && (
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-2">
-                Select Professional
-              </label>
-              <select
-                value={selectedProfessional?.id || ''}
-                onChange={(e) => {
-                  const prof = professionals.find(p => p.id === parseInt(e.target.value));
-                  setSelectedProfessional(prof);
-                  setSelectedDate('');
-                  setAvailableSlots([]);
-                  setSelectedSlot(null);
-                }}
-                className="w-full px-4 py-3 border-2 border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white transition"
-              >
-                <option value="">Choose a professional...</option>
-                {professionals
-                  .filter(prof => prof.services?.some(s => s.id === service.id))
-                  .map(prof => (
-                    <option key={prof.id} value={prof.id}>
-                      {prof.display_name}
-                      {prof.is_owner && ' (Owner)'}
-                    </option>
-                  ))
-                }
-              </select>
-            </div>
-          )}
-
-          {/* Service Info */}
-          <div className="bg-primary-50 rounded-lg p-4 border-2 border-primary-200">
-            <div className="flex justify-between items-center">
-              <div>
-                <div className="font-semibold text-neutral-900">{service.name}</div>
-                <div className="text-sm text-neutral-600">{service.duration_minutes} minutes</div>
-              </div>
-              <div className="text-xl font-bold text-primary-700">
-                ${service.price.toFixed(2)}
-              </div>
-            </div>
-          </div>
-
-          {/* Date Selection */}
-          {selectedProfessional && (
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-2">
-                Select Date
-              </label>
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                min={minDate}
-                className="w-full px-4 py-3 border-2 border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white transition"
-              />
-            </div>
-          )}
-
-          {/* Time Slots */}
-          {selectedDate && (
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-2">
-                Available Times
-              </label>
-              
-              {loadingSlots ? (
-                <div className="text-center py-8 text-neutral-600">
-                  <div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-                  Loading available times...
+        {/* Content - 2 Column Layout */}
+        <div className="p-6 overflow-y-auto flex-1">
+          <div className="grid lg:grid-cols-2 gap-6">
+            {/* LEFT COLUMN - Selection */}
+            <div className="space-y-6">
+              {/* Professional Selection */}
+              {professionals && professionals.length > 1 && (
+                <div>
+                  <label className="block text-sm font-semibold text-neutral-900 mb-2">
+                    Select Professional
+                  </label>
+                  <select
+                    value={selectedProfessional?.id || ""}
+                    onChange={(e) => {
+                      const prof = professionals.find(
+                        (p) => p.id === parseInt(e.target.value)
+                      );
+                      setSelectedProfessional(prof);
+                      setSelectedDate("");
+                      setAvailableSlots([]);
+                      setSelectedSlot(null);
+                    }}
+                    className="w-full px-4 py-3 border border-[#E5DDD5] rounded-lg focus:ring-2 focus:ring-[#B8A188] focus:border-[#B8A188] bg-white transition"
+                  >
+                    <option value="">Choose a professional...</option>
+                    {professionals
+                      .filter((prof) =>
+                        prof.services?.some((s) => s.id === service.id)
+                      )
+                      .map((prof) => (
+                        <option key={prof.id} value={prof.id}>
+                          {prof.display_name}
+                          {prof.is_owner && " (Owner)"}
+                        </option>
+                      ))}
+                  </select>
                 </div>
-              ) : availableSlots.length === 0 ? (
-                <div className="bg-primary-50 rounded-lg p-8 text-center border-2 border-primary-200">
-                  <div className="text-4xl mb-2">📅</div>
-                  <p className="text-neutral-700 font-medium">No available slots for this date</p>
-                  <p className="text-sm text-neutral-500 mt-2">
-                    Try selecting a different date or check if the professional has set their availability.
-                  </p>
+              )}
+
+              {/* Service Info Card */}
+              <div className="bg-[#F5F0EB] rounded-lg p-4 border border-[#E5DDD5]">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <div className="font-semibold text-neutral-900">
+                      {service.name}
+                    </div>
+                    <div className="text-sm text-neutral-600">
+                      {service.duration_minutes} minutes
+                    </div>
+                  </div>
+                  <div className="text-2xl font-bold text-[#8B7355]">
+                    ${service.price.toFixed(2)}
+                  </div>
                 </div>
-              ) : (
-                <div className="grid grid-cols-3 gap-3">
-                  {availableSlots.map((slot, index) => (
+              </div>
+
+              {/* Date Selection with Custom Picker */}
+              {selectedProfessional && (
+                <div>
+                  <label className="block text-sm font-semibold text-neutral-900 mb-2">
+                    Select Date
+                  </label>
+                  <div className="relative">
                     <button
-                      key={index}
-                      onClick={() => setSelectedSlot(slot)}
-                      className={`px-4 py-3 rounded-lg border-2 transition-all font-medium ${
-                        selectedSlot === slot
-                          ? 'border-primary-600 bg-primary-600 text-white shadow-md'
-                          : 'border-neutral-200 hover:border-primary-400 hover:bg-primary-50 text-neutral-900'
-                      }`}
+                      onClick={() => setShowDatePicker(!showDatePicker)}
+                      className="w-full px-4 py-3 border border-[#E5DDD5] rounded-lg bg-white text-left flex items-center justify-between hover:border-[#B8A188] transition"
                     >
-                      {formatTime(slot.start_time)}
+                      <span
+                        className={
+                          selectedDate ? "text-neutral-900" : "text-neutral-400"
+                        }
+                      >
+                        {selectedDate
+                          ? formatDate(selectedDate)
+                          : "Choose a date..."}
+                      </span>
+                      <svg
+                        className="w-5 h-5 text-neutral-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
                     </button>
-                  ))}
+
+                    {/* Custom Date Picker Dropdown */}
+                    {showDatePicker && (
+                      <div className="absolute z-50 mt-2 bg-white border border-[#E5DDD5] rounded-lg shadow-xl p-4 w-full">
+                        {/* Month Navigation */}
+                        <div className="flex items-center justify-between mb-4">
+                          <button
+                            onClick={() => changeMonth(-1)}
+                            className="p-2 hover:bg-[#F5F0EB] rounded-lg transition"
+                          >
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 19l-7-7 7-7"
+                              />
+                            </svg>
+                          </button>
+                          <span className="font-semibold text-neutral-900">
+                            {monthName}
+                          </span>
+                          <button
+                            onClick={() => changeMonth(1)}
+                            className="p-2 hover:bg-[#F5F0EB] rounded-lg transition"
+                          >
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 5l7 7-7 7"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+
+                        {/* Weekday Headers */}
+                        <div className="grid grid-cols-7 gap-1 mb-2">
+                          {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map(
+                            (day) => (
+                              <div
+                                key={day}
+                                className="text-center text-xs font-medium text-neutral-600 py-1"
+                              >
+                                {day}
+                              </div>
+                            )
+                          )}
+                        </div>
+
+                        {/* Calendar Days */}
+                        <div className="grid grid-cols-7 gap-1">
+                          {/* Empty cells for days before month starts */}
+                          {[...Array(startingDayOfWeek)].map((_, i) => (
+                            <div key={`empty-${i}`} />
+                          ))}
+
+                          {/* Actual days */}
+                          {[...Array(daysInMonth)].map((_, i) => {
+                            const day = i + 1;
+                            const disabled = isDateDisabled(day);
+                            const selected = isDateSelected(day);
+
+                            return (
+                              <button
+                                key={day}
+                                onClick={() =>
+                                  !disabled && handleDateSelect(day)
+                                }
+                                disabled={disabled}
+                                className={`
+                                  aspect-square flex items-center justify-center text-sm rounded-lg transition
+                                  ${
+                                    disabled
+                                      ? "text-neutral-300 cursor-not-allowed"
+                                      : selected
+                                      ? "bg-[#B8A188] text-white font-semibold"
+                                      : "text-neutral-900 hover:bg-[#F5F0EB]"
+                                  }
+                                `}
+                              >
+                                {day}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {/* Today Button */}
+                        <button
+                          onClick={() => {
+                            const today = new Date();
+                            setCurrentMonth(today);
+                            handleDateSelect(today.getDate());
+                          }}
+                          className="w-full mt-4 py-2 text-sm text-[#8B7355] hover:bg-[#F5F0EB] rounded-lg transition font-medium"
+                        >
+                          Today
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Notes */}
+              {selectedDate && (
+                <div>
+                  <label className="block text-sm font-semibold text-neutral-900 mb-2">
+                    Notes (Optional)
+                  </label>
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    rows={4}
+                    placeholder="Any special requests or information for the professional..."
+                    className="w-full px-4 py-3 border border-[#E5DDD5] rounded-lg focus:ring-2 focus:ring-[#B8A188] focus:border-[#B8A188] bg-white transition resize-none"
+                  />
                 </div>
               )}
             </div>
-          )}
 
-          {/* Notes */}
-          {selectedSlot && (
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-2">
-                Notes (Optional)
-              </label>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={3}
-                placeholder="Any special requests or information for the professional..."
-                className="w-full px-4 py-3 border-2 border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white transition"
-              />
-            </div>
-          )}
+            {/* RIGHT COLUMN - Time Slots & Summary */}
+            <div className="space-y-6">
+              {/* Time Slots */}
+              {selectedDate && (
+                <div>
+                  <label className="block text-sm font-semibold text-neutral-900 mb-2">
+                    Available Times
+                  </label>
 
-          {/* Summary */}
-          {selectedSlot && (
-            <div className="bg-gradient-beige-light rounded-lg p-6 border-2 border-primary-200">
-              <h3 className="font-bold text-neutral-900 mb-4 text-lg">Booking Summary</h3>
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between items-center">
-                  <span className="text-neutral-600">Professional:</span>
-                  <span className="font-semibold text-neutral-900">{selectedProfessional?.display_name}</span>
+                  {loadingSlots ? (
+                    <div className="text-center py-12 text-neutral-600 bg-[#F5F0EB] rounded-lg border border-[#E5DDD5]">
+                      <div className="w-8 h-8 border-4 border-[#B8A188] border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                      <p className="text-sm">Loading available times...</p>
+                    </div>
+                  ) : availableSlots.length === 0 ? (
+                    <div className="bg-[#F5F0EB] rounded-lg p-8 text-center border border-[#E5DDD5]">
+                      <div className="text-4xl mb-3">📅</div>
+                      <p className="text-neutral-700 font-medium">
+                        No available slots
+                      </p>
+                      <p className="text-sm text-neutral-500 mt-2">
+                        Try selecting a different date
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2 max-h-80 overflow-y-auto p-1">
+                      {availableSlots.map((slot, index) => (
+                        <button
+                          key={index}
+                          onClick={() => setSelectedSlot(slot)}
+                          className={`
+                            px-4 py-3 rounded-lg border transition-all font-medium text-sm
+                            ${
+                              selectedSlot === slot
+                                ? "border-[#B8A188] bg-[#B8A188] text-white shadow-md"
+                                : "border-[#E5DDD5] hover:border-[#B8A188] hover:bg-[#F5F0EB] text-neutral-900"
+                            }
+                          `}
+                        >
+                          {formatTime(slot.start_time)}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-neutral-600">Service:</span>
-                  <span className="font-semibold text-neutral-900">{service.name}</span>
+              )}
+
+              {/* Booking Summary */}
+              {selectedSlot && (
+                <div className="bg-[#F5F0EB] rounded-lg p-6 border border-[#E5DDD5] sticky top-0">
+                  <h3 className="font-bold text-neutral-900 mb-4 text-lg">
+                    Booking Summary
+                  </h3>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between items-center">
+                      <span className="text-neutral-600">Professional:</span>
+                      <span className="font-semibold text-neutral-900">
+                        {selectedProfessional?.display_name}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-neutral-600">Service:</span>
+                      <span className="font-semibold text-neutral-900">
+                        {service.name}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-start">
+                      <span className="text-neutral-600">Date:</span>
+                      <span className="font-semibold text-neutral-900 text-right">
+                        {formatDate(selectedDate)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-neutral-600">Time:</span>
+                      <span className="font-semibold text-neutral-900">
+                        {formatTime(selectedSlot.start_time)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-neutral-600">Duration:</span>
+                      <span className="font-semibold text-neutral-900">
+                        {service.duration_minutes} minutes
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center pt-3 border-t border-[#D4C5A0]">
+                      <span className="text-neutral-700 font-medium">
+                        Total:
+                      </span>
+                      <span className="font-bold text-[#8B7355] text-2xl">
+                        ${service.price.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p className="text-xs text-amber-800 flex items-start gap-2">
+                      <span>ℹ️</span>
+                      <span>
+                        Status will be Pending until professional confirms
+                      </span>
+                    </p>
+                  </div>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-neutral-600">Date:</span>
-                  <span className="font-semibold text-neutral-900">{formatDate(selectedDate)}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-neutral-600">Time:</span>
-                  <span className="font-semibold text-neutral-900">{formatTime(selectedSlot.start_time)}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-neutral-600">Duration:</span>
-                  <span className="font-semibold text-neutral-900">{service.duration_minutes} minutes</span>
-                </div>
-                <div className="flex justify-between items-center pt-3 border-t-2 border-primary-300">
-                  <span className="text-neutral-700 font-medium">Total:</span>
-                  <span className="font-bold text-primary-700 text-xl">${service.price.toFixed(2)}</span>
-                </div>
-              </div>
-              <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                <p className="text-xs text-amber-800">
-                 {"ℹ️ Status will be Pending until professional confirms"} 
-                </p>
-              </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
-        {/* Footer - Fixed at bottom */}
-        <div className="bg-white border-t-2 border-neutral-200 p-6 rounded-b-2xl flex gap-3 flex-shrink-0">
+        {/* Footer */}
+        <div className="bg-white border-t border-[#E5DDD5] p-6 rounded-b-2xl flex gap-3 flex-shrink-0">
           <button
             onClick={onClose}
-            className="flex-1 px-6 py-3 border-2 border-neutral-300 rounded-lg hover:bg-neutral-50 transition font-medium text-neutral-700"
+            className="flex-1 px-6 py-3 border border-[#E5DDD5] rounded-lg hover:bg-[#F5F0EB] transition font-medium text-neutral-700"
           >
             Cancel
           </button>
@@ -299,11 +531,11 @@ export default function BookingModal({ vendor, professionals, service, onClose, 
             disabled={!selectedSlot || loading}
             className={`flex-1 px-6 py-3 rounded-lg transition font-semibold ${
               selectedSlot && !loading
-                ? 'bg-primary-600 text-white hover:bg-primary-700 shadow-md'
-                : 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
+                ? "bg-[#B8A188] text-white hover:bg-[#A89178] shadow-md"
+                : "bg-neutral-300 text-neutral-500 cursor-not-allowed"
             }`}
           >
-            {loading ? 'Booking...' : 'Confirm Booking'}
+            {loading ? "Booking..." : "Confirm Booking"}
           </button>
         </div>
       </div>
