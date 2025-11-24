@@ -29,7 +29,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         FRONTEND_URL,
-        "https://bbeum.vercel.app",
+        "https://bbeum-gamma.vercel.app",
         "https://*.vercel.app",
         "*"  # Allow all for now, tighten later
     ],
