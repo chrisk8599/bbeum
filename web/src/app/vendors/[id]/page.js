@@ -158,10 +158,10 @@ export default function VendorPublicProfile({ params }) {
           <div className="lg:col-span-2 space-y-6">
             {/* Hero Images Section - Business Photos */}
             {vendor.business_images && vendor.business_images.length > 0 ? (
-              <div className="grid grid-cols-2 gap-3">
-                {/* Large image */}
+              <div className="grid grid-cols-3 gap-3">
+                {/* Large image - LEFT (2 columns, 2 rows) */}
                 <div
-                  className="col-span-2 h-80 cursor-pointer group relative overflow-hidden rounded-xl"
+                  className="col-span-2 row-span-2 h-[400px] cursor-pointer group relative overflow-hidden rounded-xl"
                   onClick={() => setSelectedImage(vendor.business_images[0])}
                 >
                   <img
@@ -186,11 +186,12 @@ export default function VendorPublicProfile({ params }) {
                     </svg>
                   </div>
                 </div>
-                {/* Two smaller images */}
+
+                {/* Two stacked images - RIGHT (1 column each, stacked) */}
                 {vendor.business_images.slice(1, 3).map((img, idx) => (
                   <div
                     key={idx}
-                    className="h-48 relative cursor-pointer group overflow-hidden rounded-xl"
+                    className="col-span-1 h-[194px] relative cursor-pointer group overflow-hidden rounded-xl"
                     onClick={() => setSelectedImage(img)}
                   >
                     <img
@@ -214,6 +215,7 @@ export default function VendorPublicProfile({ params }) {
                         />
                       </svg>
                     </div>
+                    {/* "See all photos" overlay on second small image if more than 3 */}
                     {idx === 1 && vendor.business_images.length > 3 && (
                       <div className="absolute inset-0 bg-black/40 rounded-xl flex items-center justify-center pointer-events-none">
                         <span className="text-white text-sm font-medium">
@@ -227,7 +229,7 @@ export default function VendorPublicProfile({ params }) {
             ) : vendor.avatar_url ? (
               // Fallback to avatar if no business images
               <div
-                className="w-full h-80 rounded-xl overflow-hidden cursor-pointer group relative"
+                className="w-full h-[400px] rounded-xl overflow-hidden cursor-pointer group relative"
                 onClick={() => setSelectedImage(vendor.avatar_url)}
               >
                 <img
