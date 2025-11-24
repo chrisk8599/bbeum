@@ -1,6 +1,6 @@
-'use client';
-import { useState, useEffect } from 'react';
-import { reviewsAPI } from '@/lib/api';
+"use client";
+import { useState, useEffect } from "react";
+import { reviewsAPI } from "@/lib/api";
 
 export default function VendorReviews({ vendorId }) {
   const [reviews, setReviews] = useState([]);
@@ -17,7 +17,7 @@ export default function VendorReviews({ vendorId }) {
       const data = await reviewsAPI.getVendorReviews(vendorId);
       setReviews(data);
     } catch (error) {
-      console.error('Error loading reviews:', error);
+      console.error("Error loading reviews:", error);
     } finally {
       setLoading(false);
     }
@@ -28,16 +28,16 @@ export default function VendorReviews({ vendorId }) {
       const data = await reviewsAPI.getVendorSummary(vendorId);
       setSummary(data);
     } catch (error) {
-      console.error('Error loading summary:', error);
+      console.error("Error loading summary:", error);
     }
   };
 
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
@@ -45,7 +45,10 @@ export default function VendorReviews({ vendorId }) {
     return (
       <div className="flex gap-0.5">
         {[1, 2, 3, 4, 5].map((star) => (
-          <span key={star} className={star <= rating ? 'text-yellow-400' : 'text-gray-300'}>
+          <span
+            key={star}
+            className={star <= rating ? "text-yellow-400" : "text-gray-300"}
+          >
             ★
           </span>
         ))}
@@ -56,8 +59,12 @@ export default function VendorReviews({ vendorId }) {
   if (loading) {
     return (
       <div className="bg-white rounded-xl shadow-sm p-8 border border-primary-200">
-        <h2 className="text-2xl font-serif mb-4 text-neutral-900">⭐ Reviews</h2>
-        <div className="text-center py-8 text-neutral-600">Loading reviews...</div>
+        <h2 className="text-2xl font-serif mb-4 text-neutral-900">
+          ⭐ Reviews
+        </h2>
+        <div className="text-center py-8 text-neutral-600">
+          Loading reviews...
+        </div>
       </div>
     );
   }
@@ -80,17 +87,20 @@ export default function VendorReviews({ vendorId }) {
                   {renderStars(Math.round(summary.average_rating))}
                 </div>
                 <div className="text-neutral-600">
-                  Based on {summary.total_reviews} {summary.total_reviews === 1 ? 'review' : 'reviews'}
+                  Based on {summary.total_reviews}{" "}
+                  {summary.total_reviews === 1 ? "review" : "reviews"}
                 </div>
               </div>
 
               {/* Rating Distribution */}
               <div className="space-y-2">
                 {[5, 4, 3, 2, 1].map((star) => {
-                  const count = summary.rating_distribution[star.toString()] || 0;
-                  const percentage = summary.total_reviews > 0 
-                    ? (count / summary.total_reviews) * 100 
-                    : 0;
+                  const count =
+                    summary.rating_distribution[star.toString()] || 0;
+                  const percentage =
+                    summary.total_reviews > 0
+                      ? (count / summary.total_reviews) * 100
+                      : 0;
 
                   return (
                     <div key={star} className="flex items-center gap-3">
@@ -116,11 +126,14 @@ export default function VendorReviews({ vendorId }) {
           {/* Reviews List */}
           <div className="space-y-6">
             {reviews.map((review) => (
-              <div key={review.id} className="border-b border-primary-100 pb-6 last:border-b-0">
+              <div
+                key={review.id}
+                className="border-b border-primary-100 pb-6 last:border-b-0"
+              >
                 <div className="flex justify-between items-start mb-3">
                   <div>
                     <div className="font-semibold text-neutral-900 mb-1">
-                      {review.customer_name}
+                      {review.customer?.full_name || "Anonymous"}
                     </div>
                     <div className="flex items-center gap-3">
                       {renderStars(review.rating)}
@@ -140,18 +153,24 @@ export default function VendorReviews({ vendorId }) {
                   </p>
                 )}
 
-                {/* ADDED: Professional and Service info */}
+                {/* Professional and Service info - FIXED: Access nested objects */}
                 <div className="flex flex-wrap gap-3 text-sm text-neutral-500">
-                  {review.professional_name && (
+                  {review.professional?.display_name && (
                     <div className="flex items-center gap-1">
-                      <span className="font-medium text-neutral-700">Professional:</span>
-                      <span>{review.professional_name}</span>
+                      <span className="font-medium text-neutral-700">
+                        Professional:
+                      </span>
+                      <span>{review.professional.display_name}</span>
                     </div>
                   )}
-                  <div className="flex items-center gap-1">
-                    <span className="font-medium text-neutral-700">Service:</span>
-                    <span>{review.service_name}</span>
-                  </div>
+                  {review.service?.name && (
+                    <div className="flex items-center gap-1">
+                      <span className="font-medium text-neutral-700">
+                        Service:
+                      </span>
+                      <span>{review.service.name}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
