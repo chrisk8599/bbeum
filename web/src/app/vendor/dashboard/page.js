@@ -260,8 +260,341 @@ export default function VendorDashboard() {
 
   return (
     <div className="min-h-screen bg-neutral-50">
-      {/* Rest of your component stays exactly the same... */}
-      {/* I'm not including it all here to save space, but keep everything after this point identical */}
+      {/* NEW HEADER - Matches Landing Page */}
+      <header className="bg-[#F5F0EB] border-b border-[#E5DDD5] sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+          <h1 className="text-3xl font-serif text-neutral-900">bbeum</h1>
+
+          <div className="flex items-center gap-3">
+            <Link
+              href={`/vendors/${vendor?.id}`}
+              className="px-5 py-2 text-neutral-700 hover:text-neutral-900 font-medium transition"
+            >
+              View Public Profile
+            </Link>
+            <button
+              onClick={logout}
+              className="px-6 py-2.5 bg-[#B8A188] text-white rounded-full hover:bg-[#A89178] font-medium transition"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Profile Section */}
+        <div className="bg-white rounded-lg border border-neutral-200 p-6 mb-6">
+          <div className="flex items-start gap-6">
+            {/* Avatar */}
+            <div className="relative">
+              <div className="w-24 h-24 rounded-full bg-neutral-200 flex items-center justify-center text-2xl font-medium text-neutral-600 overflow-hidden">
+                {vendor?.avatar_url ? (
+                  <img
+                    src={vendor.avatar_url}
+                    alt="Avatar"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  vendor?.business_name?.charAt(0).toUpperCase()
+                )}
+              </div>
+              <label className="absolute bottom-0 right-0 bg-neutral-900 text-white p-1.5 rounded-full cursor-pointer hover:bg-neutral-800">
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarUpload}
+                  className="hidden"
+                  disabled={uploadingAvatar}
+                />
+              </label>
+            </div>
+
+            {/* Info */}
+            <div className="flex-1">
+              {!isEditing ? (
+                <>
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-xl font-semibold text-neutral-900">
+                      {vendor?.business_name}
+                    </h3>
+                    {vendor?.is_pro && (
+                      <span className="px-2 py-1 bg-primary-600 text-white text-xs rounded-full">
+                        PRO
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-neutral-600 mt-1">{vendor?.location}</p>
+                  <p className="text-neutral-600 mt-2">{vendor?.bio}</p>
+                  {/* Business Photos Section */}
+                  <div className="mt-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-sm font-semibold text-neutral-900">
+                        Business Photos
+                      </h4>
+                      <span className="text-xs text-neutral-600">
+                        {vendor?.business_images?.length || 0} /{" "}
+                        {vendor?.is_pro ? "∞" : "3"}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-4 gap-3">
+                      {/* Existing images */}
+                      {vendor?.business_images?.map((img, index) => (
+                        <div
+                          key={index}
+                          className="relative aspect-square rounded-lg overflow-hidden border border-neutral-200 group"
+                        >
+                          <img
+                            src={img}
+                            alt={`Business ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                          <button
+                            onClick={() => handleDeleteBusinessImage(index)}
+                            className="absolute top-2 right-2 bg-red-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition"
+                          >
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+
+                      {/* Upload button */}
+                      {(!vendor?.business_images ||
+                        vendor.business_images.length <
+                          (vendor?.is_pro ? 999 : 3)) && (
+                        <label className="aspect-square rounded-lg border-2 border-dashed border-neutral-300 flex items-center justify-center cursor-pointer hover:border-neutral-400 hover:bg-neutral-50 transition">
+                          <div className="text-center">
+                            <svg
+                              className="w-8 h-8 mx-auto text-neutral-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 4v16m8-8H4"
+                              />
+                            </svg>
+                            <span className="text-xs text-neutral-600 mt-1">
+                              Add Photo
+                            </span>
+                          </div>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleBusinessImageUpload}
+                            className="hidden"
+                            disabled={uploadingBusinessImage}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="mt-4 text-sm text-primary-600 hover:text-primary-700 font-medium"
+                  >
+                    Edit Profile
+                  </button>
+                </>
+              ) : (
+                <form onSubmit={handleUpdateProfile} className="space-y-4">
+                  <input
+                    type="text"
+                    value={formData.business_name}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        business_name: e.target.value,
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
+                    placeholder="Business Name"
+                  />
+                  <input
+                    type="text"
+                    value={formData.location}
+                    onChange={(e) =>
+                      setFormData({ ...formData, location: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
+                    placeholder="Location"
+                  />
+                  <textarea
+                    value={formData.bio}
+                    onChange={(e) =>
+                      setFormData({ ...formData, bio: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
+                    rows="3"
+                    placeholder="Bio"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                    >
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditing(false)}
+                      className="px-4 py-2 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="bg-white rounded-lg border border-neutral-200 mb-6">
+          <div className="border-b border-neutral-200 px-6">
+            <div className="flex gap-8 overflow-x-auto">
+              {[
+                "calendar",
+                "analytics",
+                "team",
+                "services",
+                "availability",
+              ].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`py-4 border-b-2 font-medium transition-colors whitespace-nowrap ${
+                    activeTab === tab
+                      ? "border-neutral-900 text-neutral-900"
+                      : "border-transparent text-neutral-600 hover:text-neutral-900"
+                  }`}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="p-6">
+            {/* Calendar Tab */}
+            {activeTab === "calendar" && (
+              <div>
+                <div className="mb-6">
+                  <CalendarNavigation
+                    currentDate={currentDate}
+                    onDateChange={setCurrentDate}
+                    view={calendarView}
+                    onViewChange={setCalendarView}
+                    startDate={calendarData?.start_date}
+                    endDate={calendarData?.end_date}
+                  />
+                </div>
+
+                {professionals.length > 0 && (
+                  <div className="mb-6">
+                    <ProfessionalFilter
+                      professionals={professionals}
+                      selectedIds={selectedProfessionals}
+                      onChange={setSelectedProfessionals}
+                    />
+                  </div>
+                )}
+
+                {calendarView === "week" ? (
+                  <CalendarWeekView
+                    calendarData={calendarData}
+                    onBookingClick={setSelectedBooking}
+                  />
+                ) : (
+                  <CalendarMonthView
+                    calendarData={calendarData}
+                    onDateClick={(date) => {
+                      setCurrentDate(date);
+                      setCalendarView("week");
+                    }}
+                  />
+                )}
+              </div>
+            )}
+
+            {/* Analytics Tab */}
+            {activeTab === "analytics" && <RevenueAnalytics />}
+
+            {/* Team Tab */}
+            {activeTab === "team" && (
+              <TeamManagement
+                vendor={vendor}
+                professionals={professionals}
+                onUpdate={loadProfessionals}
+              />
+            )}
+
+            {/* Services Tab */}
+            {activeTab === "services" && (
+              <ServicesManagement
+                services={services}
+                onUpdate={loadServices}
+                isPro={vendor?.is_pro}
+              />
+            )}
+
+            {/* Availability Tab */}
+            {activeTab === "availability" && (
+              <AvailabilityManagement
+                schedule={schedule}
+                blockers={blockers}
+                professionals={professionals}
+                onUpdate={loadAvailability}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Booking Detail Modal */}
+      {selectedBooking && (
+        <BookingDetailModal
+          booking={selectedBooking}
+          onClose={() => setSelectedBooking(null)}
+          onUpdateStatus={handleUpdateBookingStatus}
+          onCancel={handleCancelBooking}
+        />
+      )}
     </div>
   );
 }
