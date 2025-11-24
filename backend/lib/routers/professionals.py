@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, File, UploadFile
 from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime
@@ -18,6 +18,7 @@ from lib.schemas.professional import (
 )
 from lib.auth import get_password_hash, get_current_user, get_current_vendor_user, create_access_token
 from lib.schemas.user import TokenResponse
+from lib.cloudinary_utils import upload_image, delete_image, extract_public_id
 
 router = APIRouter()
 
@@ -42,8 +43,9 @@ async def upload_professional_avatar(
     if not professional:
         raise HTTPException(status_code=404, detail="Professional not found")
     
-    # Verify vendor owns this professional
-    if professional.vendor_id != db.query(Vendor).filter(Vendor.user_id == current_user.id).first().id:
+    # Get vendor to verify ownership
+    vendor = db.query(Vendor).filter(Vendor.user_id == current_user.id).first()
+    if not vendor or professional.vendor_id != vendor.id:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Get professional's user
@@ -150,14 +152,15 @@ def get_my_team(
         Professional.vendor_id == vendor.id
     ).all()
     
-    # Add email and phone from user
+    # Add email, phone, and avatar_url from user
     result = []
     for prof in professionals:
         user = db.query(User).filter(User.id == prof.user_id).first()
         prof_dict = {
             **prof.__dict__,
             "email": user.email if user else None,
-            "phone": user.phone if user else None
+            "phone": user.phone if user else None,
+            "avatar_url": user.avatar_url if user else None  # Add avatar_url
         }
         result.append(prof_dict)
     
@@ -291,7 +294,17 @@ def get_vendor_professionals(vendor_id: int, db: Session = Depends(get_db)):
         Professional.is_active == True
     ).all()
     
-    return professionals
+    # Add avatar_url from user
+    result = []
+    for prof in professionals:
+        user = db.query(User).filter(User.id == prof.user_id).first()
+        prof_dict = {
+            **prof.__dict__,
+            "avatar_url": user.avatar_url if user else None
+        }
+        result.append(prof_dict)
+    
+    return result
 
 @router.get("/{professional_id}", response_model=ProfessionalResponse)
 def get_professional(professional_id: int, db: Session = Depends(get_db)):
