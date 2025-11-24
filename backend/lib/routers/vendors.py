@@ -21,6 +21,85 @@ import re
 
 router = APIRouter()
 
+# Upload business image
+@router.post("/me/business-images")
+async def upload_business_image(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_vendor_user),
+    db: Session = Depends(get_db)
+):
+    vendor = db.query(Vendor).filter(Vendor.user_id == current_user.id).first()
+    if not vendor:
+        raise HTTPException(status_code=404, detail="Vendor profile not found")
+    
+    # Validate file type
+    if not file.content_type.startswith('image/'):
+        raise HTTPException(status_code=400, detail="File must be an image")
+    
+    # Check limit: 3 for free, unlimited for PRO
+    current_images = vendor.business_images or []
+    if not vendor.is_pro and len(current_images) >= 3:
+        raise HTTPException(
+            status_code=403, 
+            detail="Free plan limited to 3 business photos. Upgrade to PRO for unlimited photos."
+        )
+    
+    # Upload to Cloudinary
+    try:
+        contents = await file.read()
+        result = upload_image(contents, folder=f"vendors/{vendor.id}/business")
+        
+        # Add to business_images array
+        if vendor.business_images is None:
+            vendor.business_images = []
+        
+        vendor.business_images.append(result['secure_url'])
+        db.commit()
+        
+        return {
+            "image_url": result['secure_url'],
+            "total_images": len(vendor.business_images),
+            "message": "Business image uploaded successfully"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to upload image: {str(e)}")
+
+
+# Delete business image
+@router.delete("/me/business-images/{image_index}")
+def delete_business_image(
+    image_index: int,
+    current_user: User = Depends(get_current_vendor_user),
+    db: Session = Depends(get_db)
+):
+    vendor = db.query(Vendor).filter(Vendor.user_id == current_user.id).first()
+    if not vendor:
+        raise HTTPException(status_code=404, detail="Vendor profile not found")
+    
+    if not vendor.business_images or image_index >= len(vendor.business_images):
+        raise HTTPException(status_code=404, detail="Image not found")
+    
+    # Get image URL to delete from Cloudinary
+    image_url = vendor.business_images[image_index]
+    
+    # Delete from Cloudinary
+    try:
+        public_id = extract_public_id(image_url)
+        if public_id:
+            delete_image(public_id)
+    except:
+        pass  # Continue even if cloudinary delete fails
+    
+    # Remove from array
+    vendor.business_images.pop(image_index)
+    db.commit()
+    
+    return {
+        "message": "Image deleted successfully",
+        "total_images": len(vendor.business_images)
+    }
+
 # Get all active vendors (public)
 @router.get("/", response_model=List[VendorListItem])
 def get_vendors(

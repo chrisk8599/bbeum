@@ -98,6 +98,19 @@ export const vendorsAPI = {
       })
       .then((res) => res.data);
   },
+  // In vendorsAPI object, add:
+  uploadBusinessImage: (formData) => {
+    return api
+      .post("/api/vendors/me/business-images", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      .then((res) => res.data);
+  },
+  deleteBusinessImage: (imageIndex) => {
+    return api
+      .delete(`/api/vendors/me/business-images/${imageIndex}`)
+      .then((res) => res.data);
+  },
 };
 
 // ========== PROFESSIONALS (NEW) ==========
@@ -124,6 +137,14 @@ export const professionalsAPI = {
     api.get(`/api/professionals/vendor/${vendorId}`).then((res) => res.data),
   getProfessional: (id) =>
     api.get(`/api/professionals/${id}`).then((res) => res.data),
+  // In professionalsAPI object, add:
+  uploadAvatar: (professionalId, formData) => {
+    return api
+      .post(`/api/professionals/${professionalId}/avatar`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      .then((res) => res.data);
+  },
 
   // Invite acceptance
   acceptInvite: (data) =>

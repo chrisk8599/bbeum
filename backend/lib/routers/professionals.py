@@ -23,6 +23,58 @@ router = APIRouter()
 
 # ========== VENDOR ENDPOINTS (Team Management) ==========
 
+@router.post("/{professional_id}/avatar")
+async def upload_professional_avatar(
+    professional_id: int,
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_vendor_user),
+    db: Session = Depends(get_db)
+):
+    # Validate file type
+    if not file.content_type.startswith('image/'):
+        raise HTTPException(status_code=400, detail="File must be an image")
+    
+    # Get professional and verify ownership
+    professional = db.query(Professional).filter(
+        Professional.id == professional_id
+    ).first()
+    
+    if not professional:
+        raise HTTPException(status_code=404, detail="Professional not found")
+    
+    # Verify vendor owns this professional
+    if professional.vendor_id != db.query(Vendor).filter(Vendor.user_id == current_user.id).first().id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Get professional's user
+    prof_user = db.query(User).filter(User.id == professional.user_id).first()
+    
+    # Upload to Cloudinary
+    try:
+        contents = await file.read()
+        result = upload_image(contents, folder=f"avatars/professionals/{professional_id}")
+        
+        # Delete old avatar if exists
+        if prof_user.avatar_url:
+            try:
+                old_public_id = extract_public_id(prof_user.avatar_url)
+                if old_public_id:
+                    delete_image(old_public_id)
+            except:
+                pass
+        
+        # Update user's avatar_url
+        prof_user.avatar_url = result['secure_url']
+        db.commit()
+        
+        return {
+            "avatar_url": result['secure_url'],
+            "message": "Avatar uploaded successfully"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to upload avatar: {str(e)}")
+
 @router.post("/invite", response_model=ProfessionalInviteResponse)
 def invite_professional(
     invite_data: ProfessionalInviteCreate,
