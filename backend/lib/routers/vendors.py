@@ -49,12 +49,16 @@ async def upload_business_image(
         contents = await file.read()
         result = upload_image(contents, folder=f"vendors/{vendor.id}/business")
         
-        # Add to business_images array
+        # Add to business_images array - PostgreSQL array handling
         if vendor.business_images is None:
             vendor.business_images = []
         
-        vendor.business_images.append(result['secure_url'])
+        # Create new list instead of appending (required for PostgreSQL arrays)
+        new_images = list(vendor.business_images) + [result['secure_url']]
+        vendor.business_images = new_images
+        
         db.commit()
+        db.refresh(vendor)
         
         return {
             "image_url": result['secure_url'],
@@ -63,6 +67,7 @@ async def upload_business_image(
         }
         
     except Exception as e:
+        db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to upload image: {str(e)}")
 
 
@@ -91,9 +96,13 @@ def delete_business_image(
     except:
         pass  # Continue even if cloudinary delete fails
     
-    # Remove from array
-    vendor.business_images.pop(image_index)
+    # Create new list without the deleted image (required for PostgreSQL arrays)
+    new_images = list(vendor.business_images)
+    new_images.pop(image_index)
+    vendor.business_images = new_images
+    
     db.commit()
+    db.refresh(vendor)
     
     return {
         "message": "Image deleted successfully",
@@ -173,11 +182,12 @@ def get_vendor(vendor_id: int, db: Session = Depends(get_db)):
     # Format professionals for response
     prof_list = []
     for prof in professionals:
+        prof_user = db.query(User).filter(User.id == prof.user_id).first()
         prof_list.append({
             "id": prof.id,
             "display_name": prof.display_name,
             "specialty": prof.specialty,
-            "avatar_url": prof.avatar_url,
+            "avatar_url": prof_user.avatar_url if prof_user else None,
             "rating": prof.rating,
             "is_owner": prof.is_owner
         })
@@ -186,6 +196,7 @@ def get_vendor(vendor_id: int, db: Session = Depends(get_db)):
     vendor_dict = {
         **vendor.__dict__,
         "avatar_url": user.avatar_url if user else None,
+        "business_images": vendor.business_images or [],
         "professionals": prof_list,
         "total_professionals": vendor.total_professionals,
         "can_add_professional": vendor.can_add_professional
@@ -207,7 +218,8 @@ def get_vendor_detail(vendor_id: int, db: Session = Depends(get_db)):
         **vendor.__dict__,
         "phone": user.phone if user else None,
         "email": user.email if user else None,
-        "avatar_url": user.avatar_url if user else None
+        "avatar_url": user.avatar_url if user else None,
+        "business_images": vendor.business_images or []
     }
     
     return vendor_dict
@@ -222,10 +234,11 @@ def get_my_profile(
     if not vendor:
         raise HTTPException(status_code=404, detail="Vendor profile not found")
     
-    # Add avatar_url from user
+    # Add avatar_url and business_images to response
     vendor_dict = {
         **vendor.__dict__,
-        "avatar_url": current_user.avatar_url
+        "avatar_url": current_user.avatar_url,
+        "business_images": vendor.business_images or []
     }
     
     return vendor_dict
@@ -257,7 +270,6 @@ def setup_profile(
                 Professional.user_id == current_user.id,
                 Professional.is_owner == True
             ).first()
-          
             
             # FIXED: Return vendor object directly, not dict
             existing.avatar_url = current_user.avatar_url if hasattr(current_user, 'avatar_url') else None
@@ -303,10 +315,11 @@ def update_profile(
     db.commit()
     db.refresh(vendor)
     
-    # Add avatar_url from user
+    # Add avatar_url and business_images to response
     vendor_dict = {
         **vendor.__dict__,
-        "avatar_url": current_user.avatar_url
+        "avatar_url": current_user.avatar_url,
+        "business_images": vendor.business_images or []
     }
     
     return vendor_dict

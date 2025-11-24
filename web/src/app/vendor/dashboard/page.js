@@ -175,7 +175,6 @@ export default function VendorDashboard() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check limit
     const currentCount = vendor?.business_images?.length || 0;
     const limit = vendor?.is_pro ? 999 : 3;
 
@@ -192,8 +191,15 @@ export default function VendorDashboard() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      await vendorsAPI.uploadBusinessImage(formData);
-      await loadProfile(); // Reload to get updated images
+      const response = await vendorsAPI.uploadBusinessImage(formData);
+
+      // ✅ Update UI immediately
+      setVendor((prev) => ({
+        ...prev,
+        business_images: prev.business_images
+          ? [...prev.business_images, response.image_url]
+          : [response.image_url],
+      }));
     } catch (error) {
       console.error("Error uploading business image:", error);
       alert("Failed to upload image");
@@ -201,7 +207,6 @@ export default function VendorDashboard() {
       setUploadingBusinessImage(false);
     }
   };
-
   const handleDeleteBusinessImage = async (imageIndex) => {
     if (!confirm("Delete this photo?")) return;
 
