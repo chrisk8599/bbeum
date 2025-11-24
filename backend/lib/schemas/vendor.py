@@ -25,6 +25,7 @@ class VendorBase(BaseModel):
     is_pro: bool
     is_active: bool
     created_at: datetime
+    business_images: Optional[List[str]] = []  # ✅ ADD THIS LINE
 
     class Config:
         from_attributes = True
@@ -32,6 +33,10 @@ class VendorBase(BaseModel):
 class VendorResponse(VendorBase):
     """Basic vendor response"""
     avatar_url: Optional[str] = None
+    total_reviews: int  # ✅ ADD THIS (was missing)
+    pro_employee_limit: int  # ✅ ADD THIS (was missing)
+    can_add_professional: bool  # ✅ ADD THIS (was missing)
+    total_professionals: int  # ✅ ADD THIS (was missing)
 
 class VendorWithProfessionals(VendorBase):
     """Vendor response with list of professionals"""
@@ -39,12 +44,14 @@ class VendorWithProfessionals(VendorBase):
     professionals: List[ProfessionalListItem] = []
     total_professionals: int
     can_add_professional: bool
+    total_reviews: int  # ✅ ADD THIS (was missing)
 
 class VendorDetailResponse(VendorBase):
     """Vendor detail with contact info"""
     avatar_url: Optional[str] = None
     phone: Optional[str] = None
     email: str
+    total_reviews: int  # ✅ ADD THIS (was missing)
 
 class VendorListItem(BaseModel):
     """Minimal vendor info for browse page"""
@@ -55,6 +62,7 @@ class VendorListItem(BaseModel):
     is_pro: bool
     avatar_url: Optional[str] = None
     total_professionals: int
+    business_images: Optional[List[str]] = []  # ✅ ADD THIS (optional for list view)
     
     class Config:
         from_attributes = True
