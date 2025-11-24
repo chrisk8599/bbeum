@@ -25,8 +25,6 @@ router = APIRouter()
 
 def extract_public_id(url: str) -> str:
     """Extract Cloudinary public_id from URL"""
-    # Example URL: https://res.cloudinary.com/cloud_name/image/upload/v123456/avatars/user_id/image_id.jpg
-    # Extract: avatars/user_id/image_id
     match = re.search(r'/upload/(?:v\d+/)?(.+)\.[^.]+$', url)
     if match:
         return match.group(1)
@@ -41,6 +39,7 @@ async def upload_professional_avatar(
     current_user: User = Depends(get_current_vendor_user),
     db: Session = Depends(get_db)
 ):
+    """Upload avatar for a specific professional (team member)"""
     # Validate file type
     if not file.content_type.startswith('image/'):
         raise HTTPException(status_code=400, detail="File must be an image")
@@ -58,30 +57,28 @@ async def upload_professional_avatar(
     if not vendor or professional.vendor_id != vendor.id:
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    # Get professional's user
-    prof_user = db.query(User).filter(User.id == professional.user_id).first()
-    
     # Upload to Cloudinary
     try:
         contents = await file.read()
         result = upload_image(contents, folder=f"avatars/professionals/{professional_id}")
         
         # Delete old avatar if exists
-        if prof_user.avatar_url:
+        if professional.avatar_url:
             try:
-                old_public_id = extract_public_id(prof_user.avatar_url)
+                old_public_id = extract_public_id(professional.avatar_url)
                 if old_public_id:
                     delete_image(old_public_id)
             except:
                 pass
         
-        # Update user's avatar_url
-        prof_user.avatar_url = result['secure_url']
+        # ✅ CRITICAL FIX: Update PROFESSIONAL avatar_url (not user avatar_url)
+        professional.avatar_url = result['secure_url']
         db.commit()
+        db.refresh(professional)
         
         return {
             "avatar_url": result['secure_url'],
-            "message": "Avatar uploaded successfully"
+            "message": "Professional avatar uploaded successfully"
         }
         
     except Exception as e:
@@ -148,33 +145,29 @@ def invite_professional(
     
     return invite
 
-# Update the get_my_team endpoint in backend/lib/routers/professionals.py
-
-@router.get("/me/team", response_model=List[ProfessionalListItem])
+@router.get("/me/team", response_model=List[ProfessionalWithEmail])
 def get_my_team(
     current_user: User = Depends(get_current_vendor_user),
     db: Session = Depends(get_db)
 ):
-    """Get all professionals in vendor's team"""
+    """Vendor gets all their professionals"""
     vendor = db.query(Vendor).filter(Vendor.user_id == current_user.id).first()
     if not vendor:
         raise HTTPException(status_code=404, detail="Vendor profile not found")
     
     professionals = db.query(Professional).filter(
-        Professional.vendor_id == vendor.id,
-        Professional.is_active == True
+        Professional.vendor_id == vendor.id
     ).all()
     
+    # ✅ CRITICAL FIX: Return professional.avatar_url (not user.avatar_url)
     result = []
     for prof in professionals:
         user = db.query(User).filter(User.id == prof.user_id).first()
-        
         prof_dict = {
             **prof.__dict__,
             "email": user.email if user else None,
             "phone": user.phone if user else None,
-            # ✅ Use professional.avatar_url NOT user.avatar_url
-            "avatar_url": prof.avatar_url  
+            "avatar_url": prof.avatar_url  # Use professional's avatar, not user's
         }
         result.append(prof_dict)
     
@@ -308,17 +301,8 @@ def get_vendor_professionals(vendor_id: int, db: Session = Depends(get_db)):
         Professional.is_active == True
     ).all()
     
-    # Add avatar_url from user
-    result = []
-    for prof in professionals:
-        user = db.query(User).filter(User.id == prof.user_id).first()
-        prof_dict = {
-            **prof.__dict__,
-            "avatar_url": user.avatar_url if user else None
-        }
-        result.append(prof_dict)
-    
-    return result
+    # ✅ Return professional.avatar_url (already in model)
+    return professionals
 
 @router.get("/{professional_id}", response_model=ProfessionalResponse)
 def get_professional(professional_id: int, db: Session = Depends(get_db)):
