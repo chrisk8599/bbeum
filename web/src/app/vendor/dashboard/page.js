@@ -290,201 +290,294 @@ export default function VendorDashboard() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Profile Section */}
         <div className="bg-white rounded-lg border border-neutral-200 p-6 mb-6">
-          <div className="flex items-start gap-6">
-            {/* Avatar */}
-            <div className="relative">
-              <div className="w-24 h-24 rounded-full bg-neutral-200 flex items-center justify-center text-2xl font-medium text-neutral-600 overflow-hidden">
-                {vendor?.avatar_url ? (
-                  <img
-                    src={vendor.avatar_url}
-                    alt="Avatar"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  vendor?.business_name?.charAt(0).toUpperCase()
-                )}
-              </div>
-              <label className="absolute bottom-0 right-0 bg-neutral-900 text-white p-1.5 rounded-full cursor-pointer hover:bg-neutral-800">
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+          <div className="space-y-6">
+            {/* Business Name and Basic Info */}
+            {!isEditing ? (
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <h3 className="text-xl font-semibold text-neutral-900">
+                    {vendor?.business_name}
+                  </h3>
+                  {vendor?.is_pro && (
+                    <span className="px-2 py-1 bg-primary-600 text-white text-xs rounded-full">
+                      PRO
+                    </span>
+                  )}
+                </div>
+                <p className="text-neutral-600 mb-2">{vendor?.location}</p>
+                <p className="text-neutral-600">{vendor?.bio}</p>
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="mt-4 text-sm text-primary-600 hover:text-primary-700 font-medium"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
+                  Edit Profile
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleUpdateProfile} className="space-y-4">
                 <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleAvatarUpload}
-                  className="hidden"
-                  disabled={uploadingAvatar}
+                  type="text"
+                  value={formData.business_name}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      business_name: e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
+                  placeholder="Business Name"
                 />
-              </label>
-            </div>
+                <input
+                  type="text"
+                  value={formData.location}
+                  onChange={(e) =>
+                    setFormData({ ...formData, location: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
+                  placeholder="Location"
+                />
+                <textarea
+                  value={formData.bio}
+                  onChange={(e) =>
+                    setFormData({ ...formData, bio: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
+                  rows="3"
+                  placeholder="Bio"
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                  >
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditing(false)}
+                    className="px-4 py-2 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
 
-            {/* Info */}
-            <div className="flex-1">
-              {!isEditing ? (
-                <>
-                  <div className="flex items-center gap-3">
-                    <h3 className="text-xl font-semibold text-neutral-900">
-                      {vendor?.business_name}
-                    </h3>
-                    {vendor?.is_pro && (
-                      <span className="px-2 py-1 bg-primary-600 text-white text-xs rounded-full">
-                        PRO
-                      </span>
+            {/* Business Avatar Section */}
+            <div className="border-t border-neutral-200 pt-6">
+              <h4 className="text-sm font-semibold text-neutral-900 mb-3">
+                Business Avatar
+              </h4>
+              <p className="text-xs text-neutral-600 mb-3">
+                This image appears on vendor cards and your public profile
+                header
+              </p>
+              <div className="flex items-center gap-4">
+                {/* Avatar Display */}
+                <div className="relative">
+                  <div className="w-24 h-24 rounded-full bg-neutral-200 flex items-center justify-center text-2xl font-medium text-neutral-600 overflow-hidden">
+                    {vendor?.avatar_url ? (
+                      <img
+                        src={vendor.avatar_url}
+                        alt="Business Avatar"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      vendor?.business_name?.charAt(0).toUpperCase()
                     )}
                   </div>
-                  <p className="text-neutral-600 mt-1">{vendor?.location}</p>
-                  <p className="text-neutral-600 mt-2">{vendor?.bio}</p>
-                  {/* Business Photos Section */}
-                  <div className="mt-6">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="text-sm font-semibold text-neutral-900">
-                        Business Photos
-                      </h4>
-                      <span className="text-xs text-neutral-600">
-                        {vendor?.business_images?.length || 0} /{" "}
-                        {vendor?.is_pro ? "∞" : "3"}
-                      </span>
-                    </div>
+                  <label className="absolute bottom-0 right-0 bg-neutral-900 text-white p-1.5 rounded-full cursor-pointer hover:bg-neutral-800">
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                    </svg>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      className="hidden"
+                      disabled={uploadingAvatar}
+                    />
+                  </label>
+                </div>
+                {uploadingAvatar && (
+                  <div className="text-sm text-neutral-600">Uploading...</div>
+                )}
+              </div>
+            </div>
 
-                    <div className="grid grid-cols-4 gap-3">
-                      {/* Existing images */}
-                      {vendor?.business_images?.map((img, index) => (
-                        <div
-                          key={index}
-                          className="relative aspect-square rounded-lg overflow-hidden border border-neutral-200 group"
-                        >
-                          <img
-                            src={img}
-                            alt={`Business ${index + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                          <button
-                            onClick={() => handleDeleteBusinessImage(index)}
-                            className="absolute top-2 right-2 bg-red-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition"
-                          >
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M6 18L18 6M6 6l12 12"
-                              />
-                            </svg>
-                          </button>
-                        </div>
-                      ))}
+            {/* Business Photos Section */}
+            <div className="border-t border-neutral-200 pt-6">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h4 className="text-sm font-semibold text-neutral-900">
+                    Business Photos
+                  </h4>
+                  <p className="text-xs text-neutral-600 mt-1">
+                    Portfolio photos displayed on your public profile
+                  </p>
+                </div>
+                <span className="text-xs text-neutral-600">
+                  {vendor?.business_images?.length || 0} /{" "}
+                  {vendor?.is_pro ? "∞" : "3"}
+                </span>
+              </div>
 
-                      {/* Upload button */}
-                      {(!vendor?.business_images ||
-                        vendor.business_images.length <
-                          (vendor?.is_pro ? 999 : 3)) && (
-                        <label className="aspect-square rounded-lg border-2 border-dashed border-neutral-300 flex items-center justify-center cursor-pointer hover:border-neutral-400 hover:bg-neutral-50 transition">
-                          <div className="text-center">
-                            <svg
-                              className="w-8 h-8 mx-auto text-neutral-400"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 4v16m8-8H4"
-                              />
-                            </svg>
-                            <span className="text-xs text-neutral-600 mt-1">
-                              Add Photo
-                            </span>
-                          </div>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleBusinessImageUpload}
-                            className="hidden"
-                            disabled={uploadingBusinessImage}
-                          />
-                        </label>
-                      )}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="mt-4 text-sm text-primary-600 hover:text-primary-700 font-medium"
+              <div className="grid grid-cols-4 gap-3">
+                {/* Existing images */}
+                {vendor?.business_images?.map((img, index) => (
+                  <div
+                    key={index}
+                    className="relative aspect-square rounded-lg overflow-hidden border border-neutral-200 group"
                   >
-                    Edit Profile
-                  </button>
-                </>
-              ) : (
-                <form onSubmit={handleUpdateProfile} className="space-y-4">
-                  <input
-                    type="text"
-                    value={formData.business_name}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        business_name: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
-                    placeholder="Business Name"
-                  />
-                  <input
-                    type="text"
-                    value={formData.location}
-                    onChange={(e) =>
-                      setFormData({ ...formData, location: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
-                    placeholder="Location"
-                  />
-                  <textarea
-                    value={formData.bio}
-                    onChange={(e) =>
-                      setFormData({ ...formData, bio: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
-                    rows="3"
-                    placeholder="Bio"
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      type="submit"
-                      className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-                    >
-                      Save
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setIsEditing(false)}
-                      className="px-4 py-2 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50"
-                    >
-                      Cancel
-                    </button>
+                    {/* Image or deleting overlay */}
+                    {deletingImageIndex === index ? (
+                      // Deleting spinner overlay
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                        <div className="text-center">
+                          <svg
+                            className="animate-spin h-8 w-8 mx-auto text-white"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                          <span className="text-xs text-white mt-2 block">
+                            Deleting...
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <img
+                        src={img}
+                        alt={`Business ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+
+                    {/* Delete button - hidden during upload/delete */}
+                    {!uploadingBusinessImage && deletingImageIndex === null && (
+                      <button
+                        onClick={() => handleDeleteBusinessImage(index)}
+                        className="absolute top-2 right-2 bg-red-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition hover:bg-red-700"
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    )}
                   </div>
-                </form>
-              )}
+                ))}
+
+                {/* Upload button or uploading spinner */}
+                {(!vendor?.business_images ||
+                  vendor.business_images.length <
+                    (vendor?.is_pro ? 999 : 3)) && (
+                  <label
+                    className={`aspect-square rounded-lg border-2 border-dashed flex items-center justify-center transition ${
+                      uploadingBusinessImage || deletingImageIndex !== null
+                        ? "border-neutral-200 bg-neutral-50 cursor-wait"
+                        : "border-neutral-300 cursor-pointer hover:border-neutral-400 hover:bg-neutral-50"
+                    }`}
+                  >
+                    {uploadingBusinessImage ? (
+                      // Uploading spinner
+                      <div className="text-center">
+                        <svg
+                          className="animate-spin h-8 w-8 mx-auto text-[#B8A188]"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        <span className="text-xs text-neutral-600 mt-2 block">
+                          Uploading...
+                        </span>
+                      </div>
+                    ) : (
+                      // Upload button
+                      <div className="text-center">
+                        <svg
+                          className="w-8 h-8 mx-auto text-neutral-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 4v16m8-8H4"
+                          />
+                        </svg>
+                        <span className="text-xs text-neutral-600 mt-1 block">
+                          Add Photo
+                        </span>
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleBusinessImageUpload}
+                      className="hidden"
+                      disabled={
+                        uploadingBusinessImage || deletingImageIndex !== null
+                      }
+                    />
+                  </label>
+                )}
+              </div>
             </div>
           </div>
         </div>
