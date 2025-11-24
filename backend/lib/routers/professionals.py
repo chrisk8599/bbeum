@@ -18,9 +18,19 @@ from lib.schemas.professional import (
 )
 from lib.auth import get_password_hash, get_current_user, get_current_vendor_user, create_access_token
 from lib.schemas.user import TokenResponse
-from lib.cloudinary_utils import upload_image, delete_image, extract_public_id
+from lib.cloudinary import upload_image, delete_image
+import re
 
 router = APIRouter()
+
+def extract_public_id(url: str) -> str:
+    """Extract Cloudinary public_id from URL"""
+    # Example URL: https://res.cloudinary.com/cloud_name/image/upload/v123456/avatars/user_id/image_id.jpg
+    # Extract: avatars/user_id/image_id
+    match = re.search(r'/upload/(?:v\d+/)?(.+)\.[^.]+$', url)
+    if match:
+        return match.group(1)
+    return None
 
 # ========== VENDOR ENDPOINTS (Team Management) ==========
 
