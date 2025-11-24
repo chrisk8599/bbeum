@@ -148,29 +148,33 @@ def invite_professional(
     
     return invite
 
-@router.get("/me/team", response_model=List[ProfessionalWithEmail])
+# Update the get_my_team endpoint in backend/lib/routers/professionals.py
+
+@router.get("/me/team", response_model=List[ProfessionalListItem])
 def get_my_team(
     current_user: User = Depends(get_current_vendor_user),
     db: Session = Depends(get_db)
 ):
-    """Vendor gets all their professionals"""
+    """Get all professionals in vendor's team"""
     vendor = db.query(Vendor).filter(Vendor.user_id == current_user.id).first()
     if not vendor:
         raise HTTPException(status_code=404, detail="Vendor profile not found")
     
     professionals = db.query(Professional).filter(
-        Professional.vendor_id == vendor.id
+        Professional.vendor_id == vendor.id,
+        Professional.is_active == True
     ).all()
     
-    # Add email, phone, and avatar_url from user
     result = []
     for prof in professionals:
         user = db.query(User).filter(User.id == prof.user_id).first()
+        
         prof_dict = {
             **prof.__dict__,
             "email": user.email if user else None,
             "phone": user.phone if user else None,
-            "avatar_url": user.avatar_url if user else None  # Add avatar_url
+            # ✅ Use professional.avatar_url NOT user.avatar_url
+            "avatar_url": prof.avatar_url  
         }
         result.append(prof_dict)
     
