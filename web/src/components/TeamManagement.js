@@ -8,6 +8,15 @@ export default function TeamManagement({ vendor, professionals, onUpdate }) {
   const [loading, setLoading] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(null);
 
+  // Add null checks to prevent rendering issues
+  if (!vendor || !professionals) {
+    return (
+      <div className="bg-white rounded-lg border border-neutral-200 p-6">
+        <div className="text-center py-8 text-neutral-600">Loading team...</div>
+      </div>
+    );
+  }
+
   const handleInvite = async (e) => {
     e.preventDefault();
     setLoading(true);
