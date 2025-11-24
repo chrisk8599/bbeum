@@ -122,8 +122,10 @@ export default function BookingModal({
   const handleDateSelect = (day) => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
-    const date = new Date(year, month, day);
-    const dateStr = date.toISOString().split("T")[0];
+    // Format as YYYY-MM-DD without timezone conversion
+    const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(
+      day
+    ).padStart(2, "0")}`;
     setSelectedDate(dateStr);
     setShowDatePicker(false);
   };
