@@ -25,7 +25,7 @@ class VendorBase(BaseModel):
     is_pro: bool
     is_active: bool
     created_at: datetime
-    business_images: Optional[List[str]] = []  # ✅ ADD THIS LINE
+    business_images: Optional[List[str]] = []
 
     class Config:
         from_attributes = True
@@ -33,25 +33,25 @@ class VendorBase(BaseModel):
 class VendorResponse(VendorBase):
     """Basic vendor response"""
     avatar_url: Optional[str] = None
-    total_reviews: int  # ✅ ADD THIS (was missing)
-    pro_employee_limit: int  # ✅ ADD THIS (was missing)
-    can_add_professional: bool  # ✅ ADD THIS (was missing)
-    total_professionals: int  # ✅ ADD THIS (was missing)
+    total_reviews: Optional[int] = 0  # ✅ Make optional with default
+    pro_employee_limit: Optional[int] = 0  # ✅ Make optional with default
+    can_add_professional: Optional[bool] = False  # ✅ Make optional with default
+    total_professionals: Optional[int] = 0  # ✅ Make optional with default
 
 class VendorWithProfessionals(VendorBase):
     """Vendor response with list of professionals"""
     avatar_url: Optional[str] = None
     professionals: List[ProfessionalListItem] = []
-    total_professionals: int
-    can_add_professional: bool
-    total_reviews: int  # ✅ ADD THIS (was missing)
+    total_professionals: Optional[int] = 0  # ✅ Make optional with default
+    can_add_professional: Optional[bool] = False  # ✅ Make optional with default
+    total_reviews: Optional[int] = 0  # ✅ Make optional with default
 
 class VendorDetailResponse(VendorBase):
     """Vendor detail with contact info"""
     avatar_url: Optional[str] = None
     phone: Optional[str] = None
     email: str
-    total_reviews: int  # ✅ ADD THIS (was missing)
+    total_reviews: Optional[int] = 0  # ✅ Make optional with default
 
 class VendorListItem(BaseModel):
     """Minimal vendor info for browse page"""
@@ -61,8 +61,8 @@ class VendorListItem(BaseModel):
     rating: float
     is_pro: bool
     avatar_url: Optional[str] = None
-    total_professionals: int
-    business_images: Optional[List[str]] = []  # ✅ ADD THIS (optional for list view)
+    total_professionals: Optional[int] = 0  # ✅ Make optional with default
+    business_images: Optional[List[str]] = []
     
     class Config:
         from_attributes = True

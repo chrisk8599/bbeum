@@ -224,7 +224,6 @@ def get_vendor_detail(vendor_id: int, db: Session = Depends(get_db)):
     
     return vendor_dict
 
-# Get current vendor's profile
 @router.get("/me/profile", response_model=VendorResponse)
 def get_my_profile(
     current_user: User = Depends(get_current_vendor_user),
@@ -234,14 +233,15 @@ def get_my_profile(
     if not vendor:
         raise HTTPException(status_code=404, detail="Vendor profile not found")
     
-    # Include ALL required fields for VendorResponse schema
+    # Only include fields that actually exist in the database
     vendor_dict = {
         **vendor.__dict__,
         "avatar_url": current_user.avatar_url,
         "business_images": vendor.business_images or [],
-        "total_reviews": vendor.total_reviews,
-        "can_add_professional": vendor.can_add_professional,
-        "total_professionals": vendor.total_professionals
+        # These are computed properties from the model
+        "can_add_professional": vendor.can_add_professional if hasattr(vendor, 'can_add_professional') else False,
+        "total_professionals": vendor.total_professionals if hasattr(vendor, 'total_professionals') else 0,
+        # total_reviews doesn't exist - will use schema default of 0
     }
     
     return vendor_dict
