@@ -228,7 +228,7 @@ export default function BookingModal({
 
             {/* Two Column: Service Info/Date/Notes + Available Times */}
             {selectedProfessional && (
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-2 gap-6 mb-6">
                 {/* LEFT COLUMN */}
                 <div className="space-y-4">
                   {/* Service Info */}
