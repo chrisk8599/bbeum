@@ -234,11 +234,14 @@ def get_my_profile(
     if not vendor:
         raise HTTPException(status_code=404, detail="Vendor profile not found")
     
-    # Add avatar_url and business_images to response
+    # Include ALL required fields for VendorResponse schema
     vendor_dict = {
         **vendor.__dict__,
         "avatar_url": current_user.avatar_url,
-        "business_images": vendor.business_images or []
+        "business_images": vendor.business_images or [],
+        "total_reviews": vendor.total_reviews,
+        "can_add_professional": vendor.can_add_professional,
+        "total_professionals": vendor.total_professionals
     }
     
     return vendor_dict
