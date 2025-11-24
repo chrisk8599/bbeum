@@ -230,7 +230,7 @@ export default function BookingModal({
 
             {/* Two Column: Service Info/Date/Notes + Available Times */}
             {selectedProfessional && (
-              <div className="grid grid-cols-2 gap-6 mb-6">
+              <div className="grid grid-cols-2 gap-6">
                 {/* LEFT COLUMN */}
                 <div className="space-y-4">
                   {/* Service Info */}
@@ -355,7 +355,7 @@ export default function BookingModal({
 
             {/* Booking Summary - Full Width - Always Visible */}
             {selectedProfessional && (
-              <div className="bg-[#F5F0EB] rounded-lg p-6 border border-[#E5DDD5]">
+              <div className="bg-[#F5F0EB] rounded-lg p-6 border border-[#E5DDD5] mt-6">
                 <h3 className="font-bold text-neutral-900 mb-4 text-lg">
                   Booking Summary
                 </h3>
