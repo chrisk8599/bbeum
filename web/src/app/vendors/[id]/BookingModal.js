@@ -355,7 +355,7 @@ export default function BookingModal({
 
             {/* Booking Summary - Full Width - Always Visible */}
             {selectedProfessional && (
-              <div className="bg-[#F5F0EB] rounded-lg p-6 border border-[#E5DDD5] mt-8">
+              <div className="bg-[#F5F0EB] rounded-lg p-6 border border-[#E5DDD5] mt-24">
                 <h3 className="font-bold text-neutral-900 mb-4 text-lg">
                   Booking Summary
                 </h3>
