@@ -21,6 +21,7 @@ class Vendor(Base):
     
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    business_images = Column(ARRAY(String), default=list)
     
     # Relationships
     user = relationship("User", backref="vendor_profile")
