@@ -45,7 +45,7 @@ export default function VendorDashboard() {
   const [isEditing, setIsEditing] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingBusinessImage, setUploadingBusinessImage] = useState(false); // ✅ MOVED HERE
-
+  const [deletingImageIndex, setDeletingImageIndex] = useState(null);
   const [formData, setFormData] = useState({
     business_name: "",
     bio: "",
@@ -210,12 +210,21 @@ export default function VendorDashboard() {
   const handleDeleteBusinessImage = async (imageIndex) => {
     if (!confirm("Delete this photo?")) return;
 
+    setDeletingImageIndex(imageIndex);
     try {
       await vendorsAPI.deleteBusinessImage(imageIndex);
-      await loadProfile();
+      // Optimistically update UI
+      setVendor((prev) => ({
+        ...prev,
+        business_images: prev.business_images.filter(
+          (_, idx) => idx !== imageIndex
+        ),
+      }));
     } catch (error) {
       console.error("Error deleting business image:", error);
       alert("Failed to delete image");
+    } finally {
+      setDeletingImageIndex(null);
     }
   };
 
