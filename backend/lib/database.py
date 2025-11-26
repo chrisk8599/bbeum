@@ -8,13 +8,11 @@ print(f"DATABASE_URL: {settings.database_url[:30]}...")
 
 # PostgreSQL with optimized connection pooling for serverless
 engine = create_engine(
-    settings.database_url,
-    pool_size=5,              # Maintain 5 persistent connections
-    max_overflow=10,          # Allow 10 additional temp connections
-    pool_timeout=30,          # Wait max 30 seconds for connection
-    pool_recycle=300,         # Recycle connections after 5 minutes (you had this)
-    pool_pre_ping=True,       # Verify connections before use (you had this)
-    echo=False                # Set True for debugging SQL queries
+    DATABASE_URL,
+    pool_size=1,           # Only 1 connection in pool
+    max_overflow=0,        # No extra connections
+    pool_pre_ping=True,    # Check connection before using
+    pool_recycle=3600      # Recycle connections every hour
 )
 
 print("✓ Database engine created successfully")
@@ -30,3 +28,5 @@ def get_db():
         db.close()
 
 print("✓ Database module loaded successfully")
+
+

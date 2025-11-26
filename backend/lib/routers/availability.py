@@ -237,3 +237,136 @@ def get_available_slots(
         "service_id": service_id,
         "slots": [{"start_time": slot['start_time'].time(), "end_time": slot['end_time'].time()} for slot in slots]
     }
+
+
+# Add this NEW endpoint to backend/app/api/availability.py
+# Place it after the existing /slots endpoint
+
+from datetime import datetime, timedelta
+
+@router.get("/check")
+def check_time_availability(
+    professional_id: int = Query(...),
+    date: date = Query(...),
+    time: str = Query(...),  # Format: "HH:MM" (e.g., "14:30")
+    db: Session = Depends(get_db)
+):
+    """
+    Check if a specific time is available (ignoring service duration)
+    Returns true if the time slot is not blocked and not booked
+    """
+    professional = db.query(Professional).filter(Professional.id == professional_id).first()
+    if not professional:
+        raise HTTPException(status_code=404, detail="Professional not found")
+    
+    # Parse time string
+    try:
+        hour, minute = map(int, time.split(':'))
+        check_time = datetime.combine(date, datetime.min.time().replace(hour=hour, minute=minute))
+    except:
+        raise HTTPException(status_code=400, detail="Invalid time format. Use HH:MM")
+    
+    # 1. Get weekly schedule for this day
+    from app.availability_utils import get_day_of_week
+    day_of_week = get_day_of_week(date)
+    schedule = db.query(WeeklySchedule).filter(
+        WeeklySchedule.professional_id == professional_id,
+        WeeklySchedule.day_of_week == day_of_week
+    ).first()
+    
+    # Check if professional works this day
+    if not schedule or not schedule.is_available:
+        return {"available": False, "reason": "Professional not working this day"}
+    
+    # Check if time is within working hours
+    work_start = datetime.combine(date, schedule.start_time)
+    work_end = datetime.combine(date, schedule.end_time)
+    
+    if check_time < work_start or check_time >= work_end:
+        return {"available": False, "reason": "Outside working hours"}
+    
+    # 2. Check for blockers (vacations, breaks)
+    from app.models.booking import BookingStatus
+    
+    blockers = db.query(TimeBlocker).filter(
+        TimeBlocker.professional_id == professional_id,
+        TimeBlocker.date == date
+    ).all()
+    
+    # Check if entire day is blocked
+    for blocker in blockers:
+        if blocker.start_time is None and blocker.end_time is None:
+            return {"available": False, "reason": "Day blocked"}
+    
+    # Check if time falls within a blocker
+    for blocker in blockers:
+        if blocker.start_time and blocker.end_time:
+            blocker_start = datetime.combine(date, blocker.start_time)
+            blocker_end = datetime.combine(date, blocker.end_time)
+            
+            if blocker_start <= check_time < blocker_end:
+                return {"available": False, "reason": "Time blocked"}
+    
+    # 3. Check for existing bookings (any booking that overlaps this time)
+    bookings = db.query(Booking).filter(
+        Booking.professional_id == professional_id,
+        Booking.booking_date == date,
+        Booking.status.notin_([BookingStatus.CANCELLED])
+    ).all()
+    
+    for booking in bookings:
+        booking_start = datetime.combine(date, booking.start_time)
+        booking_end = datetime.combine(date, booking.end_time)
+        
+        # Check if check_time falls within this booking
+        if booking_start <= check_time < booking_end:
+            return {"available": False, "reason": "Already booked"}
+    
+    return {"available": True, "reason": None}
+
+
+# Also add a vendor-level check
+@router.get("/vendor/{vendor_id}/check")
+def check_vendor_availability(
+    vendor_id: int,
+    date: date = Query(...),
+    time: str = Query(...),
+    db: Session = Depends(get_db)
+):
+    """
+    Check if ANY professional at this vendor is available at the given time
+    """
+    # Get all professionals for this vendor
+    professionals = db.query(Professional).filter(
+        Professional.vendor_id == vendor_id
+    ).all()
+    
+    if not professionals:
+        return {
+            "available": False,
+            "reason": "No professionals found",
+            "available_professionals": []
+        }
+    
+    # Check each professional
+    available_professionals = []
+    for prof in professionals:
+        result = check_time_availability(
+            professional_id=prof.id,
+            date=date,
+            time=time,
+            db=db
+        )
+        
+        if result["available"]:
+            available_professionals.append({
+                "id": prof.id,
+                "display_name": prof.display_name,
+                "avatar_url": prof.avatar_url
+            })
+    
+    return {
+        "available": len(available_professionals) > 0,
+        "available_count": len(available_professionals),
+        "available_professionals": available_professionals
+    }

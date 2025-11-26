@@ -206,6 +206,15 @@ export const availabilityAPI = {
       .delete(`/api/availability/blockers/${blockerId}`)
       .then((res) => res.data),
 
+  checkTimeAvailability: (params) =>
+    api.get("/api/availability/check", { params }).then((res) => res.data),
+
+  // NEW: Check vendor-level availability
+  checkVendorAvailability: (vendorId, params) =>
+    api
+      .get(`/api/availability/vendor/${vendorId}/check`, { params })
+      .then((res) => res.data),
+
   getAvailableSlots: (params) =>
     api.get("/api/availability/slots", { params }).then((res) => res.data),
 };
